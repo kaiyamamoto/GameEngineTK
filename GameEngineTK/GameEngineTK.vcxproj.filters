@@ -34,13 +34,10 @@
     </Manifest>
   </ItemGroup>
   <ItemGroup>
-    <MeshContentTask Include="Assets\skydome.FBX">
-      <Filter>Assets</Filter>
-    </MeshContentTask>
     <MeshContentTask Include="Assets\ground.FBX">
       <Filter>Assets</Filter>
     </MeshContentTask>
-    <MeshContentTask Include="Assets\ball.FBX">
+    <MeshContentTask Include="Assets\skydome.FBX">
       <Filter>Assets</Filter>
     </MeshContentTask>
     <MeshContentTask Include="Assets\teapot.FBX">
