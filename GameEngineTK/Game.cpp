@@ -4,17 +4,26 @@
 
 #include "pch.h"
 #include "Game.h"
+#include <CommonStates.h>
+#include <simplemath.h>
+#include <random>
+#include <time.h>    
 
 extern void ExitGame();
 
 using namespace DirectX;
+using namespace DirectX::SimpleMath;
 
 using Microsoft::WRL::ComPtr;
+using VC = VertexPositionColor;
+
+static const int WINDOW_W = 800;
+static const int WINDOW_H = 600;
 
 Game::Game() :
     m_window(0),
-    m_outputWidth(800),
-    m_outputHeight(600),
+    m_outputWidth(WINDOW_W),
+    m_outputHeight(WINDOW_H),
     m_featureLevel(D3D_FEATURE_LEVEL_9_1)
 {
 }
@@ -36,6 +45,61 @@ void Game::Initialize(HWND window, int width, int height)
     m_timer.SetFixedTimeStep(true);
     m_timer.SetTargetElapsedSeconds(1.0 / 60);
     */
+
+	// Object3Dの設定
+	Object3D::SetContext(m_d3dContext.Get());
+	Object3D::SetDevice(m_d3dDevice.Get());
+
+	// メンバの作成
+	// effectの作成
+	m_effect = std::make_unique<BasicEffect>(m_d3dDevice.Get());
+	// 設定
+	m_effect->SetProjection(XMMatrixOrthographicOffCenterRH(0,
+		m_outputWidth, m_outputHeight, 0, 0, 1));
+	m_effect->SetVertexColorEnabled(true);
+
+	void const* shaderByteCode;
+	size_t byteCodeLength;
+
+	m_effect->GetVertexShaderBytecode(&shaderByteCode, &byteCodeLength);
+
+	m_d3dDevice->CreateInputLayout(VertexPositionColor::InputElements,
+		VertexPositionColor::InputElementCount,
+		shaderByteCode, byteCodeLength,
+		m_inputLayout.GetAddressOf());
+
+	// エフェクトファクトリの作成
+	m_effectFactory = std::make_unique<EffectFactory>(m_d3dDevice.Get());
+	// テクスチャの場所を指定
+	m_effectFactory->SetDirectory(L"Resources");
+	// オブジェクトの読み込み
+	m_ground = std::make_unique<Object3D>(L"Resources\\ground.cmo", *m_effectFactory);
+	m_skyeDome = std::make_unique<Object3D>(L"Resources\\skydome.cmo", *m_effectFactory);
+	
+	std::random_device rnd;     // 非決定的な乱数生成器を生成
+	std::mt19937 mt(rnd());     //  メルセンヌ・ツイスタの32ビット版、引数は初期シード値
+	std::uniform_int_distribution<> rand100(-20, 20);        // [0, 99] 範囲の一様乱数
+	for (int i = 0; i < 10; i++)
+	{
+		m_teaPot[i] = std::make_unique<Object3D>(L"Resources\\teapot.cmo", *m_effectFactory);
+		float posX = static_cast<float>(rand100(mt));
+		float posZ = static_cast<float>(rand100(mt));
+		m_teaPot[i]->SetPosition(Vector3(posX, 0.0f, posZ));
+	}
+
+	m_time = clock()/1000.0f;
+	for (int i = 0; i < 10; i++) {
+		m_startPos[i] = m_teaPot[i]->GetPosition();
+	}
+
+	//m_mainBall = std::make_unique<Object3D>(L"Resources\\ball.cmo", *m_effectFactory);
+	//for (int i = 0; i < IN_BALL_NUM; i++)
+	//	m_inBall[i] = std::make_unique<Object3D>(L"Resources\\ball.cmo", *m_effectFactory);
+	//for (int i = 0; i < OUT_BALL_NUM; i++)
+	//	m_outBall[i] = std::make_unique<Object3D>(L"Resources\\ball.cmo", *m_effectFactory);
+
+	// デバッグカメラの生成
+	m_debugCamera = std::make_unique<DebugCamera>(m_outputWidth, m_outputHeight);
 }
 
 // Executes the basic game loop.
@@ -56,6 +120,81 @@ void Game::Update(DX::StepTimer const& timer)
 
     // TODO: Add your game logic here.
     elapsedTime;
+
+	// ゲームの毎フレーム処理
+	// デバッグカメラの更新
+	m_debugCamera->Update();
+
+	static float rotate = 0.0f;
+	rotate += 0.01f;
+	if (360.0f < rotate)
+		rotate = 0.0f;
+
+	static float scale = 5.0f;
+	static bool scaleFlag = true;
+	if (scaleFlag) {
+		scale -= 0.02f;
+		if (scale < 1.0f)
+			scaleFlag = false;
+	}
+	else {
+		scale += 0.02f;
+		if (scale > 5.0f)
+			scaleFlag = true;
+	}
+
+	for (int i = 0; i < 10; i++)
+	{
+		m_teaPot[i]->SetRotate(Vector3(0.0f, rotate, 0.0f));
+		m_teaPot[i]->SetScale(scale);
+		float timeStep = (clock() / 1000.0f - m_time / 1000.0f) / 10.0f;
+		if (timeStep < 1.0f)
+		{
+			m_teaPot[i]->SetPosition(Lerp(m_startPos[i], Vector3(0.0f, 0.0f, 0.0f), timeStep));
+		}
+		m_teaPot[i]->Update();
+	}
+
+	//static float inPosGap = 0.0f;
+	//inPosGap -= 0.02f;
+	//if (-360.0f > inPosGap)
+	//	inPosGap = 0.0f;
+	//static float outPosGap = 0.0f;
+	//outPosGap += 0.02f;
+	//if (360.0f < outPosGap)
+	//	outPosGap = 0.0f;
+	//// 内側ボール
+	//float angleDiff = 360.0f / IN_BALL_NUM;
+	//float angle = (90 * XM_2PI / 360) + inPosGap;
+	//// 真ん中ボール
+	//m_mainBall->SetScale(3.0f);
+	//m_mainBall->SetRotate(Vector3(0.0f,angle/6,0.0f));
+	//m_mainBall->Update();
+	//for (int i = 0; i < IN_BALL_NUM; i++)
+	//{
+	//	Vector3 postion = Vector3(0.0f, 0.0f, 0.0f);
+	//	angle = ((90 - angleDiff * i) * XM_2PI / 360) + inPosGap;
+	//	postion.x += IN_DIRECTION * cosf(angle);
+	//	postion.z += IN_DIRECTION * sinf(angle);
+	//	m_inBall[i]->SetPosition(postion);
+	//	m_inBall[i]->SetScale(0.8f);
+	//	m_inBall[i]->SetRotate(Vector3(0.0f, angle/6, 0.0f));
+	//	// ボールの更新
+	//	m_inBall[i]->Update();
+	//}
+	//// 外側ボール
+	//angleDiff = 360.0f / OUT_BALL_NUM;
+	//for (int i = 0; i < OUT_BALL_NUM; i++)
+	//{
+	//	Vector3 postion = Vector3(0.0f, 0.0f, 0.0f);
+	//	angle = ((90 - angleDiff * i) * XM_2PI / 360) + outPosGap;
+	//	postion.x += OUT_DIRECTION * cosf(angle);
+	//	postion.z += OUT_DIRECTION * sinf(angle);
+	//	m_outBall[i]->SetPosition(postion);
+	//	m_outBall[i]->SetRotate(Vector3(0.0f, angle/6, 0.0f));
+	//	// ボールの更新
+	//	m_outBall[i]->Update();
+	//}
 }
 
 // Draws the scene.
@@ -68,10 +207,43 @@ void Game::Render()
     }
 
     Clear();
+    // TODO: Add your rendering code here.	
+	// 描画はここに書く。
+	m_states = std::make_unique<CommonStates>(m_d3dDevice.Get());
+	m_d3dContext->OMSetBlendState(m_states->Opaque(), nullptr, 0xFFFFFFFF);
+	m_d3dContext->OMSetDepthStencilState(m_states->DepthNone(), 0);
+	m_d3dContext->RSSetState(m_states->Wireframe());
 
-    // TODO: Add your rendering code here.
+	//m_view = Matrix::CreateLookAt(Vector3(0, 2.f, 2.f),
+	//	Vector3(0,0,0), Vector3(0,1,0));
+	// デバッグカメラからビュー行列を取得
+	m_view = m_debugCamera->GetCameraMatrix();
 
-    Present();
+	m_proj = Matrix::CreatePerspectiveFieldOfView(XM_PI / 4.f,
+		float(m_outputWidth) / float(m_outputHeight), 0.1f, 1000.f);
+
+	m_effect->SetView(m_view);
+	m_effect->SetProjection(m_proj);
+	m_effect->Apply(m_d3dContext.Get());
+	m_d3dContext->IASetInputLayout(m_inputLayout.Get());
+
+	// モデルの描画
+	m_ground->Draw(*m_states, m_view, m_proj);
+	m_skyeDome->Draw(*m_states, m_view, m_proj);
+
+	for (int i = 0; i < 10; i++)
+	{
+		m_teaPot[i]->Draw(*m_states, m_view, m_proj);
+	}
+
+	//m_mainBall->Draw(*m_states, m_view, m_proj);
+	//// 球の描画
+	//for (int i = 0; i < IN_BALL_NUM; i++)
+	//	m_inBall[i]->Draw(*m_states, m_view, m_proj);
+	//for (int i = 0; i < OUT_BALL_NUM; i++)
+	//	m_outBall[i]->Draw(*m_states, m_view, m_proj);
+
+	Present();
 }
 
 // Helper method to clear the back buffers.
@@ -144,8 +316,8 @@ void Game::OnWindowSizeChanged(int width, int height)
 void Game::GetDefaultSize(int& width, int& height) const
 {
     // TODO: Change to desired default window size (note minimum size is 320x200).
-    width = 800;
-    height = 600;
+    width = WINDOW_W;
+    height = WINDOW_H;
 }
 
 // These are the resources that depend on the device.

@@ -4,6 +4,7 @@
 
 #include "pch.h"
 #include "Game.h"
+#include <Mouse.h>
 
 using namespace DirectX;
 
@@ -251,6 +252,26 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         // to any mnemonic or accelerator key. Ignore so we don't produce an error beep.
         return MAKELRESULT(0, MNC_CLOSE);
     }
+
+	// マウス関係のメッセージ
+	switch (message)
+	{
+	case WM_ACTIVATEAPP:
+	case WM_INPUT:
+	case WM_MOUSEMOVE:
+	case WM_LBUTTONDOWN:
+	case WM_LBUTTONUP:
+	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
+	case WM_MBUTTONDOWN:
+	case WM_MBUTTONUP:
+	case WM_MOUSEWHEEL:
+	case WM_XBUTTONDOWN:
+	case WM_XBUTTONUP:
+	case WM_MOUSEHOVER:
+		Mouse::ProcessMessage(message, wParam, lParam);
+		break;
+	}
 
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
