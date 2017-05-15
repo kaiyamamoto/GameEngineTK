@@ -55,7 +55,7 @@ void Game::Initialize(HWND window, int width, int height)
 	m_effect = std::make_unique<BasicEffect>(m_d3dDevice.Get());
 	// 設定
 	m_effect->SetProjection(XMMatrixOrthographicOffCenterRH(0,
-		m_outputWidth, m_outputHeight, 0, 0, 1));
+		float(m_outputWidth), float(m_outputHeight), 0, 0, 1));
 	m_effect->SetVertexColorEnabled(true);
 
 	void const* shaderByteCode;
@@ -75,31 +75,17 @@ void Game::Initialize(HWND window, int width, int height)
 	// オブジェクトの読み込み
 	m_ground = std::make_unique<Object3D>(L"Resources\\ground.cmo", *m_effectFactory);
 	m_skyeDome = std::make_unique<Object3D>(L"Resources\\skydome.cmo", *m_effectFactory);
-	
-	std::random_device rnd;     // 非決定的な乱数生成器を生成
-	std::mt19937 mt(rnd());     //  メルセンヌ・ツイスタの32ビット版、引数は初期シード値
-	std::uniform_int_distribution<> rand100(-30, 30);        // [0, 99] 範囲の一様乱数
-	for (int i = 0; i < 10; i++)
-	{
-		m_teaPot[i] = std::make_unique<Object3D>(L"Resources\\teapot.cmo", *m_effectFactory);
-		float posX = static_cast<float>(rand100(mt));
-		float posZ = static_cast<float>(rand100(mt));
-		m_teaPot[i]->SetPosition(Vector3(posX, 0.0f, posZ));
-	}
+	m_boin = std::make_unique<Object3D>(L"Resources\\boin.cmo", *m_effectFactory);
 
-	m_time = clock()/1000.0f;
-	for (int i = 0; i < 10; i++) {
-		m_startPos[i] = m_teaPot[i]->GetPosition();
-	}
-
-	//m_mainBall = std::make_unique<Object3D>(L"Resources\\ball.cmo", *m_effectFactory);
-	//for (int i = 0; i < IN_BALL_NUM; i++)
-	//	m_inBall[i] = std::make_unique<Object3D>(L"Resources\\ball.cmo", *m_effectFactory);
-	//for (int i = 0; i < OUT_BALL_NUM; i++)
-	//	m_outBall[i] = std::make_unique<Object3D>(L"Resources\\ball.cmo", *m_effectFactory);
+	m_boin->SetPosition(Vector3(0.0f, 0.0f, 0.0f));
+	// キーボード作成
+	m_key = std::make_unique<Keyboard>();
 
 	// デバッグカメラの生成
 	m_debugCamera = std::make_unique<DebugCamera>(m_outputWidth, m_outputHeight);
+
+	// カメラの作成
+	m_camera = std::make_unique<Camera>(m_outputWidth, m_outputHeight);
 }
 
 // Executes the basic game loop.
@@ -123,78 +109,41 @@ void Game::Update(DX::StepTimer const& timer)
 
 	// ゲームの毎フレーム処理
 	// デバッグカメラの更新
-	m_debugCamera->Update();
+	//m_debugCamera->Update();
 
-	static float rotate = 0.0f;
-	rotate += 0.01f;
-	if (360.0f < rotate)
-		rotate = 0.0f;
+	// カメラの更新
+	m_camera->SetEyePos(m_boin->GetPosition()+Vector3(0.0f, 1.0f, -5.0f));	// カメラ位置
+	m_camera->SetRefPos(m_boin->GetPosition());	// 注視点
+	m_camera->SetUpVecPos(Vector3(0, 1, 0));		// 上方向ベクトル
 
-	static float scale = 5.0f;
-	static bool scaleFlag = true;
-	if (scaleFlag) {
-		scale -= 0.02f;
-		if (scale < 1.0f)
-			scaleFlag = false;
-	}
-	else {
-		scale += 0.02f;
-		if (scale > 5.0f)
-			scaleFlag = true;
-	}
+	m_camera->Update();							// 更新
 
-	for (int i = 0; i < 10; i++)
-	{
-		m_teaPot[i]->SetRotate(Vector3(0.0f, rotate, 0.0f));
-		m_teaPot[i]->SetScale(scale);
-		float timeStep = (clock() / 1000.0f - m_time / 1000.0f) / 10.0f;
-		if (timeStep < 1.0f)
-		{
-			m_teaPot[i]->SetPosition(Lerp(m_startPos[i], Vector3(0.0f, 0.0f, 0.0f), timeStep));
-		}
-		m_teaPot[i]->Update();
-	}
+	m_view = m_camera->GetViewMatrix();			// ビュー座標
+	m_proj = m_camera->GetProjMatrix();			// 射影座標
+	// ボインの処理 =========================================
 
-	//static float inPosGap = 0.0f;
-	//inPosGap -= 0.02f;
-	//if (-360.0f > inPosGap)
-	//	inPosGap = 0.0f;
-	//static float outPosGap = 0.0f;
-	//outPosGap += 0.02f;
-	//if (360.0f < outPosGap)
-	//	outPosGap = 0.0f;
-	//// 内側ボール
-	//float angleDiff = 360.0f / IN_BALL_NUM;
-	//float angle = (90 * XM_2PI / 360) + inPosGap;
-	//// 真ん中ボール
-	//m_mainBall->SetScale(3.0f);
-	//m_mainBall->SetRotate(Vector3(0.0f,angle/6,0.0f));
-	//m_mainBall->Update();
-	//for (int i = 0; i < IN_BALL_NUM; i++)
-	//{
-	//	Vector3 postion = Vector3(0.0f, 0.0f, 0.0f);
-	//	angle = ((90 - angleDiff * i) * XM_2PI / 360) + inPosGap;
-	//	postion.x += IN_DIRECTION * cosf(angle);
-	//	postion.z += IN_DIRECTION * sinf(angle);
-	//	m_inBall[i]->SetPosition(postion);
-	//	m_inBall[i]->SetScale(0.8f);
-	//	m_inBall[i]->SetRotate(Vector3(0.0f, angle/6, 0.0f));
-	//	// ボールの更新
-	//	m_inBall[i]->Update();
-	//}
-	//// 外側ボール
-	//angleDiff = 360.0f / OUT_BALL_NUM;
-	//for (int i = 0; i < OUT_BALL_NUM; i++)
-	//{
-	//	Vector3 postion = Vector3(0.0f, 0.0f, 0.0f);
-	//	angle = ((90 - angleDiff * i) * XM_2PI / 360) + outPosGap;
-	//	postion.x += OUT_DIRECTION * cosf(angle);
-	//	postion.z += OUT_DIRECTION * sinf(angle);
-	//	m_outBall[i]->SetPosition(postion);
-	//	m_outBall[i]->SetRotate(Vector3(0.0f, angle/6, 0.0f));
-	//	// ボールの更新
-	//	m_outBall[i]->Update();
-	//}
+	// キー取得
+	auto state = m_key->GetState();
+
+	// 回転
+	Vector3 roteV = Vector3(0.0f, 0.0f, 0.0f);
+	if (state.D)	roteV = Vector3(0.0f, -0.01f, 0.0f);
+	else if (state.A)		roteV = Vector3(0.0f, 0.01f, 0.0f);
+	m_boin->SetRotate(m_boin->GetRotate() + roteV);
+
+	// 移動
+	Vector3 moveV = Vector3(0.0f, 0.0f, 0.0f);
+	if (state.W)		moveV = Vector3(0.0f, 0.0f, -0.1f);
+	else if (state.S)	moveV = Vector3(0.0f, 0.0f, +0.1f);
+	// 移動回転
+	Matrix rotmat = Matrix::Identity;
+	rotmat *= Matrix::CreateRotationY(m_boin->GetRotate().y*XM_2PI);
+	moveV = Vector3::TransformNormal(moveV, rotmat);
+	m_boin->SetPosition(m_boin->GetPosition() + moveV);
+
+	// モデルの更新
+	m_boin->Update();
+
 }
 
 // Draws the scene.
@@ -214,13 +163,15 @@ void Game::Render()
 	m_d3dContext->OMSetDepthStencilState(m_states->DepthNone(), 0);
 	m_d3dContext->RSSetState(m_states->Wireframe());
 
-	//m_view = Matrix::CreateLookAt(Vector3(0, 2.f, 2.f),
-	//	Vector3(0,0,0), Vector3(0,1,0));
 	// デバッグカメラからビュー行列を取得
-	m_view = m_debugCamera->GetCameraMatrix();
+	//m_view = m_debugCamera->GetCameraMatrix();
+	// カメラからビュー行列を取得
+	m_view = m_camera->GetViewMatrix();
 
-	m_proj = Matrix::CreatePerspectiveFieldOfView(XM_PI / 4.f,
-		float(m_outputWidth) / float(m_outputHeight), 0.1f, 1000.f);
+	// 射影行列を生成
+	//m_proj = Matrix::CreatePerspectiveFieldOfView(fovY, aspect, nearClip, farClip);
+	//　射影行列を取得
+	m_proj = m_camera->GetProjMatrix();
 
 	m_effect->SetView(m_view);
 	m_effect->SetProjection(m_proj);
@@ -230,18 +181,7 @@ void Game::Render()
 	// モデルの描画
 	m_ground->Draw(*m_states, m_view, m_proj);
 	m_skyeDome->Draw(*m_states, m_view, m_proj);
-
-	for (int i = 0; i < 10; i++)
-	{
-		m_teaPot[i]->Draw(*m_states, m_view, m_proj);
-	}
-
-	//m_mainBall->Draw(*m_states, m_view, m_proj);
-	//// 球の描画
-	//for (int i = 0; i < IN_BALL_NUM; i++)
-	//	m_inBall[i]->Draw(*m_states, m_view, m_proj);
-	//for (int i = 0; i < OUT_BALL_NUM; i++)
-	//	m_outBall[i]->Draw(*m_states, m_view, m_proj);
+	m_boin->Draw(*m_states, m_view, m_proj);
 
 	Present();
 }

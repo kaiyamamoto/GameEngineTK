@@ -12,6 +12,7 @@
     <ClInclude Include="StepTimer.h" />
     <ClInclude Include="Object3D.h" />
     <ClInclude Include="DebugCamera.h" />
+    <ClInclude Include="Camera.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -19,6 +20,7 @@
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Object3D.cpp" />
     <ClCompile Include="DebugCamera.cpp" />
+    <ClCompile Include="Camera.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />
@@ -41,6 +43,9 @@
       <Filter>Assets</Filter>
     </MeshContentTask>
     <MeshContentTask Include="Assets\teapot.FBX">
+      <Filter>Assets</Filter>
+    </MeshContentTask>
+    <MeshContentTask Include="Assets\boin.FBX">
       <Filter>Assets</Filter>
     </MeshContentTask>
   </ItemGroup>

@@ -14,21 +14,21 @@
 #include "DebugCamera.h"
 #include <Model.h>
 #include "Object3D.h"
+#include <Keyboard.h>
+#include "Camera.h"
 
 // A basic game implementation that creates a D3D11 device and
 // provides a game loop.
 class Game
 {
 public:
-	static const int IN_BALL_NUM	= 10;	// 内側ボールの数
-	static const int OUT_BALL_NUM	= 10;	// 外側ボールの数
-	static const int IN_DIRECTION	= 15;	// 内側ボールの距離
-	static const int OUT_DIRECTION	= 28;	// 外側ボールの距離
 
 private:
 	std::unique_ptr<DirectX::BasicEffect>		m_effect;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout>	m_inputLayout;
 	std::unique_ptr<DirectX::CommonStates>		m_states;
+
+	std::unique_ptr<DirectX::Keyboard> m_key;
 
 	// エフェクトファクトリ
 	std::unique_ptr<DirectX::EffectFactory> m_effectFactory;
@@ -40,15 +40,14 @@ private:
 	// モデル
 	std::unique_ptr<Object3D> m_ground;
 	std::unique_ptr<Object3D> m_skyeDome;
-	//std::unique_ptr<Object3D> m_mainBall;
-	//std::unique_ptr<Object3D> m_inBall[IN_BALL_NUM];
-	//std::unique_ptr<Object3D> m_outBall[OUT_BALL_NUM];
-	std::unique_ptr<Object3D> m_teaPot[10];
 
-
+	std::unique_ptr<Object3D> m_boin;
 
 	// デバッグカメラ
 	std::unique_ptr<DebugCamera> m_debugCamera;
+
+	// カメラ
+	std::unique_ptr<Camera> m_camera;
 
 public:
     Game();

@@ -47,9 +47,10 @@ public:
 	// 移動
 	void SetPosition(const DirectX::SimpleMath::Vector3& vec3) { m_position = vec3; }
 	DirectX::SimpleMath::Vector3 GetPosition() { return m_position; }
-
+	
 	// 回転
 	void SetRotate(const DirectX::SimpleMath::Vector3& rotate) { m_rotate = rotate; }
+	DirectX::SimpleMath::Vector3 GetRotate() { return m_rotate; }
 
 	// スケール変更
 	void SetScale(const float& scale) { m_scale = scale; }

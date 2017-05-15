@@ -53,7 +53,6 @@ void Object3D::Update()
 	rotateMatrix *= Matrix::CreateRotationZ(m_rotate.z*XM_2PI);
 	// ˆÚ“®
 	transMatrix = Matrix::CreateTranslation(m_position);
-
 	// ‰‰ŽZ
 	m_world = scaleMatrix*rotateMatrix*transMatrix;
 }

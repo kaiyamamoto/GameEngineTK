@@ -5,6 +5,7 @@
 #include "pch.h"
 #include "Game.h"
 #include <Mouse.h>
+#include <Keyboard.h>
 
 using namespace DirectX;
 
@@ -252,6 +253,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         // to any mnemonic or accelerator key. Ignore so we don't produce an error beep.
         return MAKELRESULT(0, MNC_CLOSE);
     }
+
+	// キーボードのメッセージ
+	switch (message)
+	{
+	case WM_ACTIVATEAPP:
+		Keyboard::ProcessMessage(message, wParam, lParam);
+		break;
+
+	case WM_KEYDOWN:
+	case WM_SYSKEYDOWN:
+	case WM_KEYUP:
+	case WM_SYSKEYUP:
+		Keyboard::ProcessMessage(message, wParam, lParam);
+		break;
+	}
 
 	// マウス関係のメッセージ
 	switch (message)
