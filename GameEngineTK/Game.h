@@ -14,8 +14,9 @@
 #include "DebugCamera.h"
 #include <Model.h>
 #include "Object3D.h"
-#include <Keyboard.h>
-#include "Camera.h"
+#include "FollowCamera.h"
+#include "PlayerRobot.h"
+#include "EnemyRobot.h"
 
 // A basic game implementation that creates a D3D11 device and
 // provides a game loop.
@@ -28,8 +29,6 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11InputLayout>	m_inputLayout;
 	std::unique_ptr<DirectX::CommonStates>		m_states;
 
-	std::unique_ptr<DirectX::Keyboard> m_key;
-
 	// エフェクトファクトリ
 	std::unique_ptr<DirectX::EffectFactory> m_effectFactory;
 
@@ -41,10 +40,11 @@ private:
 	std::unique_ptr<Object3D> m_ground;
 	std::unique_ptr<Object3D> m_skyeDome;
 
-	std::unique_ptr<Object3D> m_boin;
+	// プレイヤー
+	std::unique_ptr<PlayerRobot> m_Player;
 
-	// デバッグカメラ
-	std::unique_ptr<DebugCamera> m_debugCamera;
+	// 敵
+	std::vector<std::unique_ptr<EnemyRobot>> m_enemies;
 
 	// カメラ
 	std::unique_ptr<Camera> m_camera;
@@ -99,21 +99,4 @@ private:
 
     // Rendering loop timer.
     DX::StepTimer                                   m_timer;
-
-
-	// 時間
-	float m_time;
-	DirectX::SimpleMath::Vector3 m_startPos[10];
-
-	DirectX::SimpleMath::Vector3 Lerp(
-		DirectX::SimpleMath::Vector3 startPosition, 
-		DirectX::SimpleMath::Vector3 targetPosition, float t)
-	{
-		DirectX::SimpleMath::Vector3 lerpPosition 
-			= DirectX::SimpleMath::Vector3(0.0f,0.0f,0.0f);
-
-		lerpPosition = (1 - t) * startPosition + t * targetPosition;
-
-		return lerpPosition;
-	}
 };

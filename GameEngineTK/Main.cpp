@@ -5,7 +5,7 @@
 #include "pch.h"
 #include "Game.h"
 #include <Mouse.h>
-#include <Keyboard.h>
+#include "Input.h"
 
 using namespace DirectX;
 
@@ -254,40 +254,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         return MAKELRESULT(0, MNC_CLOSE);
     }
 
-	// キーボードのメッセージ
-	switch (message)
-	{
-	case WM_ACTIVATEAPP:
-		Keyboard::ProcessMessage(message, wParam, lParam);
-		break;
-
-	case WM_KEYDOWN:
-	case WM_SYSKEYDOWN:
-	case WM_KEYUP:
-	case WM_SYSKEYUP:
-		Keyboard::ProcessMessage(message, wParam, lParam);
-		break;
-	}
-
-	// マウス関係のメッセージ
-	switch (message)
-	{
-	case WM_ACTIVATEAPP:
-	case WM_INPUT:
-	case WM_MOUSEMOVE:
-	case WM_LBUTTONDOWN:
-	case WM_LBUTTONUP:
-	case WM_RBUTTONDOWN:
-	case WM_RBUTTONUP:
-	case WM_MBUTTONDOWN:
-	case WM_MBUTTONUP:
-	case WM_MOUSEWHEEL:
-	case WM_XBUTTONDOWN:
-	case WM_XBUTTONUP:
-	case WM_MOUSEHOVER:
-		Mouse::ProcessMessage(message, wParam, lParam);
-		break;
-	}
+	// 入力関係のメッセージ
+	YamagenLib::Input::ProcessMessage(message, wParam, lParam);
 
     return DefWindowProc(hWnd, message, wParam, lParam);
 }

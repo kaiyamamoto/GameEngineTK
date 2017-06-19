@@ -7,12 +7,14 @@
 #include <CommonStates.h>
 #include <simplemath.h>
 #include <random>
-#include <time.h>    
+#include <time.h>   
+#include "Input.h"
 
 extern void ExitGame();
 
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
+using namespace YamagenLib;
 
 using Microsoft::WRL::ComPtr;
 using VC = VertexPositionColor;
@@ -38,19 +40,11 @@ void Game::Initialize(HWND window, int width, int height)
     CreateDevice();
 
     CreateResources();
+	// メンバの作成 =========================================================================
 
-    // TODO: Change the timer settings if you want something other than the default variable timestep mode.
-    // e.g. for 60 FPS fixed timestep update logic, call:
-    /*
-    m_timer.SetFixedTimeStep(true);
-    m_timer.SetTargetElapsedSeconds(1.0 / 60);
-    */
+	// 入力関係初期化
+	Input::Create();
 
-	// Object3Dの設定
-	Object3D::SetContext(m_d3dContext.Get());
-	Object3D::SetDevice(m_d3dDevice.Get());
-
-	// メンバの作成
 	// effectの作成
 	m_effect = std::make_unique<BasicEffect>(m_d3dDevice.Get());
 	// 設定
@@ -72,20 +66,28 @@ void Game::Initialize(HWND window, int width, int height)
 	m_effectFactory = std::make_unique<EffectFactory>(m_d3dDevice.Get());
 	// テクスチャの場所を指定
 	m_effectFactory->SetDirectory(L"Resources");
+
+	// Object3Dの設定
+	Object3D::Initialize(m_d3dDevice.Get(), m_d3dContext.Get(), m_effectFactory.get());
 	// オブジェクトの読み込み
-	m_ground = std::make_unique<Object3D>(L"Resources\\ground.cmo", *m_effectFactory);
-	m_skyeDome = std::make_unique<Object3D>(L"Resources\\skydome.cmo", *m_effectFactory);
-	m_boin = std::make_unique<Object3D>(L"Resources\\boin.cmo", *m_effectFactory);
+	m_ground = std::make_unique<Object3D>(L"Resources\\ground.cmo");
+	m_skyeDome = std::make_unique<Object3D>(L"Resources\\skydome.cmo");
 
-	m_boin->SetPosition(Vector3(0.0f, 0.0f, 0.0f));
-	// キーボード作成
-	m_key = std::make_unique<Keyboard>();
+	// プレイヤーの作成
+	m_Player = std::make_unique<PlayerRobot>();
+	m_Player->SetPosition(Vector3(0.0f, 1.0f, 0.0f));
 
-	// デバッグカメラの生成
-	m_debugCamera = std::make_unique<DebugCamera>(m_outputWidth, m_outputHeight);
+	// 敵の作成
+	int enemyNum = rand() % 10 + 1;
+	m_enemies.resize(enemyNum);
+	for (int i = 0; i < enemyNum; i++)
+	{
+		m_enemies[i] = std::make_unique<EnemyRobot>();
+		m_enemies[i]->Initialize();
+	}
 
 	// カメラの作成
-	m_camera = std::make_unique<Camera>(m_outputWidth, m_outputHeight);
+	m_camera = std::make_unique<FollowCamera>(m_Player.get(), m_outputWidth, m_outputHeight);
 }
 
 // Executes the basic game loop.
@@ -107,43 +109,26 @@ void Game::Update(DX::StepTimer const& timer)
     // TODO: Add your game logic here.
     elapsedTime;
 
+	// 入力の更新
+	Input::Update();
+
 	// ゲームの毎フレーム処理
 	// デバッグカメラの更新
 	//m_debugCamera->Update();
 
 	// カメラの更新
-	m_camera->SetEyePos(m_boin->GetPosition()+Vector3(0.0f, 1.0f, -5.0f));	// カメラ位置
-	m_camera->SetRefPos(m_boin->GetPosition());	// 注視点
-	m_camera->SetUpVecPos(Vector3(0, 1, 0));		// 上方向ベクトル
-
-	m_camera->Update();							// 更新
+	m_camera->Update();							
 
 	m_view = m_camera->GetViewMatrix();			// ビュー座標
 	m_proj = m_camera->GetProjMatrix();			// 射影座標
-	// ボインの処理 =========================================
 
-	// キー取得
-	auto state = m_key->GetState();
+	// プレイヤーの更新
+	m_Player->Update();
 
-	// 回転
-	Vector3 roteV = Vector3(0.0f, 0.0f, 0.0f);
-	if (state.D)	roteV = Vector3(0.0f, -0.01f, 0.0f);
-	else if (state.A)		roteV = Vector3(0.0f, 0.01f, 0.0f);
-	m_boin->SetRotate(m_boin->GetRotate() + roteV);
-
-	// 移動
-	Vector3 moveV = Vector3(0.0f, 0.0f, 0.0f);
-	if (state.W)		moveV = Vector3(0.0f, 0.0f, -0.1f);
-	else if (state.S)	moveV = Vector3(0.0f, 0.0f, +0.1f);
-	// 移動回転
-	Matrix rotmat = Matrix::Identity;
-	rotmat *= Matrix::CreateRotationY(m_boin->GetRotate().y*XM_2PI);
-	moveV = Vector3::TransformNormal(moveV, rotmat);
-	m_boin->SetPosition(m_boin->GetPosition() + moveV);
-
-	// モデルの更新
-	m_boin->Update();
-
+	// 敵の更新
+	for (auto itr = m_enemies.begin(); itr != m_enemies.end(); ++itr){
+		(*itr)->Update();
+	}
 }
 
 // Draws the scene.
@@ -169,7 +154,9 @@ void Game::Render()
 	m_view = m_camera->GetViewMatrix();
 
 	// 射影行列を生成
-	//m_proj = Matrix::CreatePerspectiveFieldOfView(fovY, aspect, nearClip, farClip);
+	//m_proj = Matrix::CreatePerspectiveFieldOfView(XMConvertToRadians(60.0f)
+	//	, float(m_outputWidth) / float(m_outputHeight), 0.1f, 1000.0f);
+
 	//　射影行列を取得
 	m_proj = m_camera->GetProjMatrix();
 
@@ -181,7 +168,10 @@ void Game::Render()
 	// モデルの描画
 	m_ground->Draw(*m_states, m_view, m_proj);
 	m_skyeDome->Draw(*m_states, m_view, m_proj);
-	m_boin->Draw(*m_states, m_view, m_proj);
+	m_Player->Draw(*m_states, m_view, m_proj);
+	for (auto itr = m_enemies.begin(); itr != m_enemies.end(); ++itr) {
+		(*itr)->Draw(*m_states, m_view, m_proj);
+	}
 
 	Present();
 }
@@ -466,7 +456,6 @@ void Game::CreateResources()
 void Game::OnDeviceLost()
 {
     // TODO: Add Direct3D resource cleanup here.
-
     m_depthStencilView.Reset();
     m_renderTargetView.Reset();
     m_swapChain1.Reset();
@@ -479,4 +468,8 @@ void Game::OnDeviceLost()
     CreateDevice();
 
     CreateResources();
+
+	// MyClass
+	Input::Destory();
+
 }

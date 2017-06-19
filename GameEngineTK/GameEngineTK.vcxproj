@@ -162,16 +162,29 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="EnemyRobot.h" />
+    <ClInclude Include="Input.h" />
+    <ClInclude Include="PlayerRobot.h" />
+    <ClInclude Include="Robot.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="DebugCamera.h" />
+    <ClInclude Include="FollowCamera.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="Object3D.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="State\JumpingState.h" />
+    <ClInclude Include="State\RobotState.h" />
+    <ClInclude Include="State\StandingState.h" />
     <ClInclude Include="StepTimer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="EnemyRobot.cpp" />
+    <ClCompile Include="Input.cpp" />
+    <ClCompile Include="PlayerRobot.cpp" />
+    <ClCompile Include="Robot.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="DebugCamera.cpp" />
+    <ClCompile Include="FollowCamera.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Object3D.cpp" />
@@ -181,6 +194,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="State\JumpingState.cpp" />
+    <ClCompile Include="State\StandingState.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />
@@ -197,8 +212,12 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <MeshContentTask Include="Assets\body.FBX" />
     <MeshContentTask Include="Assets\boin.FBX" />
     <MeshContentTask Include="Assets\ground.FBX" />
+    <MeshContentTask Include="Assets\head.FBX" />
+    <MeshContentTask Include="Assets\leg.FBX" />
+    <MeshContentTask Include="Assets\missile.FBX" />
     <MeshContentTask Include="Assets\skydome.FBX" />
     <MeshContentTask Include="Assets\teapot.FBX" />
   </ItemGroup>

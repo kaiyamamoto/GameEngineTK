@@ -18,10 +18,10 @@ protected:
 	float							m_farClip;	// 奥の表示限界
 
 public:
-	Camera(int screenWidth, int screenHeight);			// コンストラクタ
+	Camera(int screenWidth, int screenHeight);	// コンストラクタ
 	virtual ~Camera();							// 仮想デストラクタ
 
-	void Update();		// 更新
+	virtual void Update();		// 更新
 	DirectX::SimpleMath::Matrix GetViewMatrix() const { return m_view; }
 	DirectX::SimpleMath::Matrix GetProjMatrix() const { return m_proj; }
 	void SetEyePos(const DirectX::SimpleMath::Vector3 &eyePos) { m_eyePos = eyePos; }

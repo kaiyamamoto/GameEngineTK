@@ -5,6 +5,9 @@
       <UniqueIdentifier>32ca5625-d281-4058-875f-dcac86e86119</UniqueIdentifier>
       <Extensions>ico;cur;bmp;dds;dlg;fbx;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tga;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="State">
+      <UniqueIdentifier>{2a666825-f688-42de-8c49-611dc4e10fe6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -13,6 +16,20 @@
     <ClInclude Include="Object3D.h" />
     <ClInclude Include="DebugCamera.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="FollowCamera.h" />
+    <ClInclude Include="Robot.h" />
+    <ClInclude Include="State\JumpingState.h">
+      <Filter>State</Filter>
+    </ClInclude>
+    <ClInclude Include="State\StandingState.h">
+      <Filter>State</Filter>
+    </ClInclude>
+    <ClInclude Include="State\RobotState.h">
+      <Filter>State</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerRobot.h" />
+    <ClInclude Include="Input.h" />
+    <ClInclude Include="EnemyRobot.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -21,6 +38,17 @@
     <ClCompile Include="Object3D.cpp" />
     <ClCompile Include="DebugCamera.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="FollowCamera.cpp" />
+    <ClCompile Include="Robot.cpp" />
+    <ClCompile Include="State\JumpingState.cpp">
+      <Filter>State</Filter>
+    </ClCompile>
+    <ClCompile Include="State\StandingState.cpp">
+      <Filter>State</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayerRobot.cpp" />
+    <ClCompile Include="Input.cpp" />
+    <ClCompile Include="EnemyRobot.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />
@@ -46,6 +74,18 @@
       <Filter>Assets</Filter>
     </MeshContentTask>
     <MeshContentTask Include="Assets\boin.FBX">
+      <Filter>Assets</Filter>
+    </MeshContentTask>
+    <MeshContentTask Include="Assets\body.FBX">
+      <Filter>Assets</Filter>
+    </MeshContentTask>
+    <MeshContentTask Include="Assets\head.FBX">
+      <Filter>Assets</Filter>
+    </MeshContentTask>
+    <MeshContentTask Include="Assets\leg.FBX">
+      <Filter>Assets</Filter>
+    </MeshContentTask>
+    <MeshContentTask Include="Assets\missile.FBX">
       <Filter>Assets</Filter>
     </MeshContentTask>
   </ItemGroup>
