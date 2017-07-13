@@ -5,12 +5,13 @@
 
 #pragma once
 
-#include<simplemath.h>
+#include <simplemath.h>
 #include "Object3D.h"
 #include <vector>
 #include <Keyboard.h>
 #include "State\\RobotState.h"
 #include <math.h>
+#include "CollisionNode.h"
 
 class RobotState;
 
@@ -44,10 +45,10 @@ public:
 	void Initialize();
 
 	// 描画
-	void Draw(const DirectX::CommonStates& state, const DirectX::SimpleMath::Matrix& view, const DirectX::SimpleMath::Matrix& proj) const;
+	virtual void Draw(const DirectX::CommonStates& state, const DirectX::SimpleMath::Matrix& view, const DirectX::SimpleMath::Matrix& proj) const;
 
 	//　更新
-	void Update();
+	virtual void Update();
 
 	// 行列の計算
 	void Calc();
@@ -55,7 +56,10 @@ public:
 	// 速度設定
 	DirectX::SimpleMath::Vector3 GetSpeed() { return m_speed; }
 	void SetSpeed(DirectX::SimpleMath::Vector3 vec) { m_speed = vec; }
-	
+	void SetSpeedX(float spd) { m_speed.x = spd; }
+	void SetSpeedY(float spd) { m_speed.y = spd; }
+	void SetSpeedZ(float spd) { m_speed.z = spd; }
+
 	// 加速度設定
 	void SetAcceleSpeed(DirectX::SimpleMath::Vector3 vec) { m_acceleSpeed = vec; }
 

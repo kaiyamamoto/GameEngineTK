@@ -17,6 +17,8 @@
 #include "FollowCamera.h"
 #include "PlayerRobot.h"
 #include "EnemyRobot.h"
+#include "GameEffect.h"
+#include "LandShape.h"
 
 // A basic game implementation that creates a D3D11 device and
 // provides a game loop.
@@ -37,8 +39,10 @@ private:
 	DirectX::SimpleMath::Matrix m_proj;		// 射影行列
 
 	// モデル
-	std::unique_ptr<Object3D> m_ground;
+	//std::unique_ptr<Object3D> m_ground;
 	std::unique_ptr<Object3D> m_skyeDome;
+	// 地形
+	LandShape m_LandShape;
 
 	// プレイヤー
 	std::unique_ptr<PlayerRobot> m_Player;
@@ -49,6 +53,8 @@ private:
 	// カメラ
 	std::unique_ptr<Camera> m_camera;
 
+	// エフェクトリスト
+	std::list<GameEffect*> m_effectList;
 public:
     Game();
 

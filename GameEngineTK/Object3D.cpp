@@ -27,7 +27,7 @@ map<wstring,unique_ptr<Model>> Object3D::m_modelArray;
 Object3D::Object3D()
 	: m_model(nullptr)
 	, m_position(Vector3(0.0f, 0.0f, 0.0f))
-	, m_rotate(Vector3(0.0f, 0.0f, 0.0f))
+	, m_eulerAngles(Vector3(0.0f, 0.0f, 0.0f))
 	, m_scale(1.0f)
 	, m_pParent(nullptr)
 {
@@ -89,6 +89,13 @@ void Object3D::Initialize(ID3D11Device * d3ddevice, ID3D11DeviceContext * d3dcon
 	SetEffectFactory(effect);
 }
 
+void Object3D::LoadModel(const wchar_t * fileName)
+{
+	m_model = LoadModelFile(fileName);
+
+}
+
+
 /// <summary>
 /// 更新
 /// </summary>
@@ -102,13 +109,13 @@ void Object3D::Update()
 	// 回転行列
 	if (m_useQuternion)
 	{// クォータニオンから回転行列を計算
-		rotateMatrix = Matrix::CreateFromQuaternion(m_rotateQ);
+		rotateMatrix = Matrix::CreateFromQuaternion(m_rotateQuaternion);
 	}
 	else
 	{// オイラー角から回転行列を計算（Z→X→Y）
-		rotateMatrix *= Matrix::CreateRotationZ(m_rotate.z);
-		rotateMatrix *= Matrix::CreateRotationX(m_rotate.x);
-		rotateMatrix *= Matrix::CreateRotationY(m_rotate.y);
+		rotateMatrix *= Matrix::CreateRotationZ(m_eulerAngles.z);
+		rotateMatrix *= Matrix::CreateRotationX(m_eulerAngles.x);
+		rotateMatrix *= Matrix::CreateRotationY(m_eulerAngles.y);
 	}
 	// 移動
 	transMatrix = Matrix::CreateTranslation(m_position);

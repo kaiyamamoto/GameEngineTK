@@ -4,11 +4,36 @@
 
 class PlayerRobot :public Robot	// ロボットを継承
 {
+private :
+	// 弾の速度
+	DirectX::SimpleMath::Vector3 m_BulletVel;
+
+	// 弾丸発射中フラグ
+	bool m_FireFlag;
+
+	// 当たり判定球
+	SphereNode m_CollisionNode;
+
+	// 自機のあたり判定
+	SphereNode m_CollisionNodeBody;
 public:
 	PlayerRobot();			// コンストラクタ	
 	virtual ~PlayerRobot();	// デストラクタ
 
 	//　更新
-	void Update();
+	void Update()override;
+
+	// 描画
+	void Draw(const DirectX::CommonStates& state, const DirectX::SimpleMath::Matrix& view, const DirectX::SimpleMath::Matrix& proj) const override;
+
+	// 発射
+	void FireBullet();
+	// 弾リセット
+	void ResetBullet();
+
+	// 当たり判定球を取得
+	const SphereNode& GetCollisionNodeBullet() { return m_CollisionNode; }
+	// 当たり判定球を取得
+	const SphereNode& GetCollisionNodeBody() { return m_CollisionNodeBody; }
 };
 

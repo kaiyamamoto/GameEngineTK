@@ -1,5 +1,5 @@
 #include "JumpingState.h"
-#include "StandingState.h"
+#include "OnGroundState.h"
 #include <simplemath.h>
 
 using namespace DirectX::SimpleMath;
@@ -12,9 +12,8 @@ JumpingState* JumpingState::m_instance = nullptr;
 /// <param name="player"></param>
 void JumpingState::Enter(Robot & robot)
 {
-	Vector3 speed = robot.GetSpeed();
-	speed.y += 0.5f;
-	robot.SetSpeed(speed);
+	// Y軸に速度設定
+	robot.SetSpeedY(0.5f);
 }
 
 /// <summary>
@@ -26,17 +25,15 @@ void JumpingState::Enter(Robot & robot)
 RobotState * JumpingState::HandleInput(Robot & robot)
 {
 	// スタンディング状態の処理
-	StandingState::GetInstance()->HandleInput(robot);
+	OnGroundState::GetInstance()->HandleInput(robot);
 
-	Vector3 pos = robot.GetPosition();
+	float posY = robot.GetPosition().y;
 
-	if (pos.y <= 1.0f) {		
-		Vector3 speed = robot.GetSpeed();
-		speed.y = 0.0f;
-		robot.SetSpeed(speed);
-		// ジャンプ終了
-		return StandingState::GetInstance();
-	}
+	//// 座標で判定（いずれ地面判定など）
+	//if (posY <= 1.0f) {		
+	//	// ジャンプ終了
+	//	return OnGroundState::GetInstance();
+	//}
 	return nullptr;
 }
 
@@ -46,10 +43,10 @@ RobotState * JumpingState::HandleInput(Robot & robot)
 /// <param name="player"></param>
 void JumpingState::Update(Robot & robot)
 {
-	// 重力を加える
+	// 速度を反映
 	Vector3 speed = robot.GetSpeed();
 	speed.y += Object3D::GRAVITY;
-	robot.SetSpeed(speed);
+	robot.SetSpeedY(speed.y);
 }
 
 /// <summary>
@@ -58,4 +55,6 @@ void JumpingState::Update(Robot & robot)
 /// <param name="robot"></param>
 void JumpingState::Exit(Robot & robot)
 {
+	// 速度を戻す
+	robot.SetSpeedY(0.0f);
 }

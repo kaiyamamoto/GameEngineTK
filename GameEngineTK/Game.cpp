@@ -40,11 +40,13 @@ void Game::Initialize(HWND window, int width, int height)
     CreateDevice();
 
     CreateResources();
+
 	// メンバの作成 =========================================================================
 
+	GameEffect::Initialize(m_d3dDevice.Get(), m_d3dContext.Get());
 	// 入力関係初期化
 	Input::Create();
-
+	CollisionNode::SetDebugVisible(true);
 	// effectの作成
 	m_effect = std::make_unique<BasicEffect>(m_d3dDevice.Get());
 	// 設定
@@ -62,15 +64,16 @@ void Game::Initialize(HWND window, int width, int height)
 		shaderByteCode, byteCodeLength,
 		m_inputLayout.GetAddressOf());
 
-	// エフェクトファクトリの作成
+	// エフェクトファクトリ生成
 	m_effectFactory = std::make_unique<EffectFactory>(m_d3dDevice.Get());
-	// テクスチャの場所を指定
+	// テクスチャの読み込みフォルダを指定
 	m_effectFactory->SetDirectory(L"Resources");
 
 	// Object3Dの設定
 	Object3D::Initialize(m_d3dDevice.Get(), m_d3dContext.Get(), m_effectFactory.get());
+	
 	// オブジェクトの読み込み
-	m_ground = std::make_unique<Object3D>(L"Resources\\ground.cmo");
+	//m_ground = std::make_unique<Object3D>(L"Resources\\ground.cmo");
 	m_skyeDome = std::make_unique<Object3D>(L"Resources\\skydome.cmo");
 
 	// プレイヤーの作成
@@ -88,6 +91,18 @@ void Game::Initialize(HWND window, int width, int height)
 
 	// カメラの作成
 	m_camera = std::make_unique<FollowCamera>(m_Player.get(), m_outputWidth, m_outputHeight);
+
+	// 地形の初期化に必要な設定
+	LandShapeCommonDef lscDef;
+	lscDef.pDevice = m_d3dDevice.Get();
+	lscDef.pDeviceContext = m_d3dContext.Get();
+	lscDef.pCamera = m_camera.get();
+	// 地形の共通初期化
+	LandShape::InitializeCommon(lscDef);
+
+	// 地形の読み込み
+	m_LandShape.Initialize(L"ball", L"ground");
+
 }
 
 // Executes the basic game loop.
@@ -124,11 +139,95 @@ void Game::Update(DX::StepTimer const& timer)
 
 	// プレイヤーの更新
 	m_Player->Update();
+	m_LandShape.Update();
 
 	// 敵の更新
 	for (auto itr = m_enemies.begin(); itr != m_enemies.end(); ++itr){
 		(*itr)->Update();
 	}
+	// 弾丸と敵のあたり判定
+	// 弾丸の判定球取得
+	const Sphere& bulletSphere = m_Player->GetCollisionNodeBullet();
+
+	// 敵の数だけ処理する
+	for (std::vector<std::unique_ptr<EnemyRobot>>::iterator it = m_enemies.begin();
+		it != m_enemies.end();
+		)
+	{
+		EnemyRobot* enemy = it->get();
+
+		// 敵の判定球取得
+		const Sphere& enemySphere = enemy->GetCollisionNodeBody();
+
+		// 二つの球が当たっていたら
+		if (CollisionNode::CheckSphere2Sphere(bulletSphere, enemySphere))
+		{
+			// 敵を殺す
+			float x = enemy->GetPosition().x;
+			float y = enemy->GetPosition().y;
+			float z = enemy->GetPosition().z;
+			// eraseした要素の次を指すイテレータを取得
+			m_effectList.push_back(new GameEffect(L"Resources\\MAGICALxSPIRAL\\down.efk", x, y, z));
+			it = m_enemies.erase(it);
+		}
+		else it++;	// イテレータを進める
+	}
+
+	{// 自機の地形へのめり込みを検出して、押し出す
+	 // 自機の全身球を取得
+		Sphere sphere = m_Player->GetCollisionNodeBody();
+		// 自機のワールド座標を取得
+		Vector3 trans = m_Player->GetPosition();
+		// 当たり球の中心から自機の足元へのベクトル
+		Vector3 sphere2player = trans - sphere.center;
+
+		// 排斥ベクトル
+		Vector3 reject;
+
+		// 地形と球の当たり判定
+		if (m_LandShape.IntersectSphere(sphere, &reject))
+		{
+			// めり込み分だけ、球を押し出す
+			sphere.center += reject;
+		}
+
+		// めり込みを排除した座標をセット
+		m_Player->SetPosition(sphere.center += sphere2player);
+
+		// 自機のワールド行列更新
+		m_Player->Calc();
+	}
+
+	{// 地面に乗る処理
+	 // プレイヤーの上から下へのベクトル
+		Segment player_segment;
+		// 自機のワールド座標を取得
+		Vector3 trans = m_Player->GetPosition();
+		player_segment.start = trans + Vector3(0, 1, 0);
+		// 50センチ下まで判定をとって吸着する
+		player_segment.end = trans + Vector3(0, -0.5f, 0);
+
+		Vector3 inter;
+		// 地形と線分の当たり判定
+		if (m_LandShape.IntersectSegment(player_segment, &inter))
+		{
+			// Y座標のみ交点の位置に移動
+			trans.y = inter.y;
+			m_Player->SetPosition(trans);
+			// 自機のワールド行列更新
+			m_Player->Calc();
+		}
+	}
+
+	// エフェクト更新
+	for (auto itr = m_effectList.begin(); itr != m_effectList.end();) {
+		if ((*itr)->IsEnd())
+		{
+			itr = m_effectList.erase(itr);
+		}
+		else itr++;	// イテレータを進める
+	}
+
 }
 
 // Draws the scene.
@@ -166,11 +265,15 @@ void Game::Render()
 	m_d3dContext->IASetInputLayout(m_inputLayout.Get());
 
 	// モデルの描画
-	m_ground->Draw(*m_states, m_view, m_proj);
+	m_LandShape.Draw(*m_states, m_view, m_proj);
+	//m_ground->Draw(*m_states, m_view, m_proj);
 	m_skyeDome->Draw(*m_states, m_view, m_proj);
 	m_Player->Draw(*m_states, m_view, m_proj);
 	for (auto itr = m_enemies.begin(); itr != m_enemies.end(); ++itr) {
 		(*itr)->Draw(*m_states, m_view, m_proj);
+	}
+	for (auto itr = m_effectList.begin(); itr != m_effectList.end();itr++) {
+		(*itr)->Draw(m_view, m_proj);
 	}
 
 	Present();

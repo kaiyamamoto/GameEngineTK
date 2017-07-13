@@ -1,4 +1,4 @@
-#include "StandingState.h"
+#include "OnGroundState.h"
 #include "JumpingState.h"
 #include <simplemath.h>
 #include "..\Input.h"
@@ -7,13 +7,13 @@ using namespace DirectX::SimpleMath;
 using namespace DirectX;
 using namespace YamagenLib;
 
-StandingState* StandingState::m_instance = nullptr;
+OnGroundState* OnGroundState::m_instance = nullptr;
 
 /// <summary>
 /// 入口処理
 /// </summary>
 /// <param name="player"></param>
-void StandingState::Enter(Robot & player)
+void OnGroundState::Enter(Robot & player)
 {
 	m_time = 0.0f;
 }
@@ -24,32 +24,32 @@ void StandingState::Enter(Robot & player)
 /// <param name="player">プレイヤー</param>
 /// <param name="keyTracker">入力されたキー</param>
 /// <returns>次の状態があるときは状態を返す</returns>
-RobotState * StandingState::HandleInput(Robot & robot)
+RobotState * OnGroundState::HandleInput(Robot & robot)
 {
 	Update(robot);
 
 	// ロボ回転	関数化
 	Vector3 roteV = Vector3(0.0f, 0.0f, 0.0f);
-	if		(Input::GetKey(Input::Key::D))	  roteV = Vector3(0.0f, -0.01f, 0.0f);
-	else if (Input::GetKey(Input::Key::A)) roteV = Vector3(0.0f, 0.01f, 0.0f);
-	robot.SetRotate(robot.GetRotate() + roteV);
+	if (Input::GetKey(Key::D))	  roteV = Vector3(0.0f, -0.01f, 0.0f);
+	else if (Input::GetKey(Key::A)) roteV = Vector3(0.0f, 0.01f, 0.0f);
+	robot.SetEulerAngle(robot.GetEulerAngle() + roteV);
 
 	// ロボ移動	関数化
 	Vector3 moveV = Vector3(0.0f, 0.0f, 0.0f);
-	if		(Input::GetKey(Input::Key::W))		 moveV = Vector3(0.0f, 0.0f, -0.1f);
+	if (Input::GetKey(Key::W))		 moveV = Vector3(0.0f, 0.0f, -0.1f);
 
-	else if (Input::GetKey(Input::Key::S)) moveV = Vector3(0.0f, 0.0f, +0.1f);
+	else if (Input::GetKey(Key::S)) moveV = Vector3(0.0f, 0.0f, +0.1f);
 
 	if (moveV != Vector3::Zero) m_isWalke = true;
 	else m_isWalke = false;
 
 	// 移動回転	関数化
 	Matrix rotmat = Matrix::Identity;
-	rotmat *= Matrix::CreateRotationY(robot.GetRotateRadians().y);
+	rotmat *= Matrix::CreateRotationY(robot.GetEulerAngleRadians().y);
 	moveV = Vector3::TransformNormal(moveV, rotmat);
 	robot.SetPosition(robot.GetPosition() + moveV);
 
-	if (Input::GetKeyDown(Input::Key::Space)) {
+	if (Input::GetKeyDown(Key::Space)) {
 		// 地面にいるならジャンプ
 		return JumpingState::GetInstance();
 	}
@@ -61,7 +61,7 @@ RobotState * StandingState::HandleInput(Robot & robot)
 /// 更新処理
 /// </summary>
 /// <param name="player"></param>
-void StandingState::Update(Robot & robot)
+void OnGroundState::Update(Robot & robot)
 {
 	if (m_isWalke)
 	{
@@ -79,7 +79,7 @@ void StandingState::Update(Robot & robot)
 /// 出口処理
 /// </summary>
 /// <param name="robot"></param>
-void StandingState::Exit(Robot & robot)
+void OnGroundState::Exit(Robot & robot)
 {
 	robot.GetRobotParts(Robot::Parts::LEFTLEG)->SetPosition(Vector3(1.0f, 0.0f, 0.0f));
 	robot.GetRobotParts(Robot::Parts::RIGHTLEG)->SetPosition(Vector3(-1.0f, 0.0f, 0.0f));

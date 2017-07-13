@@ -58,7 +58,7 @@ void FollowCamera::Update()
 	Vector3 cameraV(0.0f, 0.0f, CAMERA_DISTANCE);
 
 	// カメラの視点方向の逆方向に回転
-	Matrix rotmat = Matrix::CreateRotationY(m_pObject->GetRotateRadians().y);
+	Matrix rotmat = Matrix::CreateRotationY(m_pObject->GetEulerAngleRadians().y);
 	cameraV = Vector3::TransformNormal(cameraV, rotmat);
 
 	// カメラ座標計算

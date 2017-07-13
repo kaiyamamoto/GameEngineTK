@@ -8,6 +8,9 @@
     <Filter Include="State">
       <UniqueIdentifier>{2a666825-f688-42de-8c49-611dc4e10fe6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="LandShape">
+      <UniqueIdentifier>{dd99e646-036c-41b0-887f-f4f2b9fb7862}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -21,15 +24,27 @@
     <ClInclude Include="State\JumpingState.h">
       <Filter>State</Filter>
     </ClInclude>
-    <ClInclude Include="State\StandingState.h">
-      <Filter>State</Filter>
-    </ClInclude>
     <ClInclude Include="State\RobotState.h">
       <Filter>State</Filter>
     </ClInclude>
     <ClInclude Include="PlayerRobot.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="EnemyRobot.h" />
+    <ClInclude Include="Collision.h" />
+    <ClInclude Include="CollisionNode.h" />
+    <ClInclude Include="State\MoveState.h">
+      <Filter>State</Filter>
+    </ClInclude>
+    <ClInclude Include="State\OnGroundState.h">
+      <Filter>State</Filter>
+    </ClInclude>
+    <ClInclude Include="GameEffect.h" />
+    <ClInclude Include="LandShape.h">
+      <Filter>LandShape</Filter>
+    </ClInclude>
+    <ClInclude Include="LandShapeData.h">
+      <Filter>LandShape</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -43,12 +58,24 @@
     <ClCompile Include="State\JumpingState.cpp">
       <Filter>State</Filter>
     </ClCompile>
-    <ClCompile Include="State\StandingState.cpp">
-      <Filter>State</Filter>
-    </ClCompile>
     <ClCompile Include="PlayerRobot.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="EnemyRobot.cpp" />
+    <ClCompile Include="Collision.cpp" />
+    <ClCompile Include="CollisionNode.cpp" />
+    <ClCompile Include="State\MoveState.cpp">
+      <Filter>State</Filter>
+    </ClCompile>
+    <ClCompile Include="State\OnGroundState.cpp">
+      <Filter>State</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEffect.cpp" />
+    <ClCompile Include="LandShape.cpp">
+      <Filter>LandShape</Filter>
+    </ClCompile>
+    <ClCompile Include="LandShapeData.cpp">
+      <Filter>LandShape</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />
@@ -86,6 +113,15 @@
       <Filter>Assets</Filter>
     </MeshContentTask>
     <MeshContentTask Include="Assets\missile.FBX">
+      <Filter>Assets</Filter>
+    </MeshContentTask>
+    <MeshContentTask Include="Assets\SphereNode.FBX">
+      <Filter>Assets</Filter>
+    </MeshContentTask>
+    <MeshContentTask Include="Assets\ball.FBX">
+      <Filter>Assets</Filter>
+    </MeshContentTask>
+    <MeshContentTask Include="Assets\ground200m.FBX">
       <Filter>Assets</Filter>
     </MeshContentTask>
   </ItemGroup>

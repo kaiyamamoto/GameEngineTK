@@ -1,0 +1,304 @@
+#include "CollisionNode.h"
+
+using namespace DirectX::SimpleMath;
+
+// 静的メンバの宣言
+// デバッグ表示のON/OFFフラグ
+bool CollisionNode::s_DebugVisible;
+
+
+/// <summary>
+/// CollisionNodeのメンバ関数
+/// </summary>
+
+void CollisionNode::SetParent(Object3D * parent)
+{
+	m_Obj.SetParent(parent);
+}
+
+/// <summary>
+/// 線分と法線付き三角形のあたり判定
+/// </summary>
+/// <param name="_segment">光線の線分</param>
+/// <param name="_triangle">法線付き三角形</param>
+/// <param name="_inter">交点</param>
+/// <returns>あたり判定結果</returns>
+/// 裏面のあたりは無し
+bool CollisionNode::CheckSegment2Triangle(const Segment & _segment, const Triangle & _triangle, DirectX::SimpleMath::Vector3 * _inter)
+{
+	const float epsilon = -1.0e-5f;	// 誤差吸収用の微小な値
+	Vector3 	LayV;		// 線分の終点→始点
+	Vector3 	tls;		// 三角形の頂点0→線分の始点
+	Vector3 	tle;		// 三角形の頂点0→線分の終点
+	float 	distl0;
+	float 	distl1;
+	float 	dp;
+	float 	denom;
+	float 	t;
+	Vector3	s;			// 直線と平面との交点
+	Vector3 	st0;		// 交点→三角形の頂点0
+	Vector3 	st1;		// 交点→三角形の頂点1
+	Vector3 	st2;		// 交点→三角形の頂点2
+	Vector3 	t01;		// 三角形の頂点0→頂点1
+	Vector3 	t12;		// 三角形の頂点1→頂点2
+	Vector3 	t20;		// 三角形の頂点2→頂点0
+	Vector3	m;
+
+	// 線分の始点が三角系の裏側にあれば、当たらない
+	tls = _segment.start - _triangle.P0;
+	distl0 = tls.Dot(_triangle.Normal);	// 線分の始点と平面の距離
+	if (distl0 <= epsilon) return false;
+
+	// 線分の終点が三角系の表側にあれば、当たらない
+	tle = _segment.end - _triangle.P0;
+	distl1 = tle.Dot(_triangle.Normal);	// 線分の終点と平面の距離
+	if (distl1 >= -epsilon) return false;
+
+	// 直線と平面との交点sを取る
+	denom = distl0 - distl1;
+	t = distl0 / denom;
+	LayV = _segment.end - _segment.start;	// 線分の方向ベクトルを取得
+	s = t * LayV + _segment.start;
+
+	// 交点が三角形の内側にあるかどうかを調べる。
+	// 三角形の内側にある場合、交点から各頂点へのベクトルと各辺ベクトルの外積（三組）が、全て法線と同じ方向を向く
+	// 一つでも方向が一致しなければ、当たらない。
+	st0 = _triangle.P0 - s;
+	t01 = _triangle.P1 - _triangle.P0;
+	m = st0.Cross(t01);
+	dp = m.Dot(_triangle.Normal);
+	if (dp <= epsilon) return false;
+
+	st1 = _triangle.P1 - s;
+	t12 = _triangle.P2 - _triangle.P1;
+	m = st1.Cross(t12);
+	dp = m.Dot(_triangle.Normal);
+	if (dp <= epsilon) return false;
+
+	st2 = _triangle.P2 - s;
+	t20 = _triangle.P0 - _triangle.P2;
+	m = st2.Cross(t20);
+	dp = m.Dot(_triangle.Normal);
+	if (dp <= epsilon) return false;
+
+	if (_inter)
+	{
+		*_inter = s;	// 交点をコピー
+	}
+
+	return true;
+}
+
+/// <summary>
+/// 点と三角形の最近接点を計算
+/// </summary>
+/// <param name="_point">点</param>
+/// <param name="_triangle">線分</param>
+/// <param name="_closest">最近接点</param>
+void CollisionNode::ClosestPtPoint2Triangle(const Vector3& _point, const Triangle& _triangle, Vector3* _closest)
+{
+	// _pointがP0の外側の頂点領域の中にあるかどうかチェック
+	Vector3 P0_P1 = _triangle.P1 - _triangle.P0;
+	Vector3 P0_P2 = _triangle.P2 - _triangle.P0;
+	Vector3 P0_PT = _point - _triangle.P0;
+	float d1 = P0_P1.Dot(P0_PT);
+	float d2 = P0_P2.Dot(P0_PT);
+	if (d1 <= 0.0f && d2 <= 0.0f){
+		// P0が最近傍
+		*_closest = _triangle.P0;
+		return;
+	}
+	// _pointがP1の外側の頂点領域の中にあるかどうかチェック
+	Vector3 P1_PT = _point - _triangle.P1;
+	float d3 = P0_P1.Dot(P1_PT);
+	float d4 = P0_P2.Dot(P1_PT);
+	if (d3 >= 0.0f && d4 <= d3){
+		// P1が最近傍
+		*_closest = _triangle.P1;
+		return;
+	}
+	// _pointがP0_P1の辺領域の中にあるかどうかチェックし、あれば_pointのP0_P1上に対する射影を返す
+	float vc = d1 * d4 - d3 * d2;
+	if (vc <= 0.0f && d1 >= 0.0f && d3 <= 0.0f){
+		float v = d1 / (d1 - d3);
+		*_closest = _triangle.P0 + v * P0_P1;
+		return;
+	}
+	// _pointがP2の外側の頂点領域の中にあるかどうかチェック
+	Vector3 P2_PT = _point - _triangle.P2;
+	float d5 = P0_P1.Dot(P2_PT);
+	float d6 = P0_P2.Dot(P2_PT);
+	if (d6 >= 0.0f && d5 <= d6){
+		*_closest = _triangle.P2;
+		return;
+	}
+	// _pointがP0_P2の辺領域の中にあるかどうかチェックし、あれば_pointのP0_P2上に対する射影を返す
+	float vb = d5 * d2 - d1 * d6;
+	if (vb <= 0.0f && d2 >= 0.0f && d6 <= 0.0f){
+		float w = d2 / (d2 - d6);
+		*_closest = _triangle.P0 + w * P0_P2;
+
+		return;
+	}
+	// _pointがP1_P2の辺領域の中にあるかどうかチェックし、あれば_pointのP1_P2上に対する射影を返す
+	float va = d3 * d6 - d5 * d4;
+
+	if (va <= 0.0f && (d4 - d3) >= 0.0f && (d5 - d6) >= 0.0f)
+	{
+		float w = (d4 - d3) / ((d4 - d3) + (d5 - d6));
+		*_closest = _triangle.P1 + w * (_triangle.P2 - _triangle.P1);
+		return;
+	}
+
+	float denom = 1.0f / (va + vb + vc);
+	float v = vb * denom;
+	float w = vc * denom;
+
+	*_closest = _triangle.P0 + P0_P1 * v + P0_P2 * w;
+}
+
+// 三角形と点の当たり判定
+bool CollisionNode::CheckPoint2Triangle(const DirectX::SimpleMath::Vector3& _point, const Triangle& _triangle)
+{
+	//点と三角形は同一平面上にあるものとしています。同一平面上に無い場合は正しい結果になりません
+	//線上は外とみなします。
+	//ABCが三角形かどうかのチェックは省略...
+
+	// 点0→1、 1→2、 2→0 のベクトルをそれぞれ計算
+	Vector3 v01 = _triangle.P1 - _triangle.P0;
+	Vector3 v12 = _triangle.P2 - _triangle.P1;
+	Vector3 v20 = _triangle.P0 - _triangle.P2;
+	// 三角形の各頂点から点へのベクトルをそれぞれ計算
+	Vector3 v0p = _point - _triangle.P0;
+	Vector3 v1p = _point - _triangle.P1;
+	Vector3 v2p = _point - _triangle.P2;
+	// 各辺ベクトルと、点へのベクトルの外積を計算
+	Vector3 c0 = v01.Cross(v0p);
+	Vector3 c1 = v12.Cross(v1p);
+	Vector3 c2 = v20.Cross(v2p);
+	// 内積で同じ方向かどうか調べる
+	float dot01 = c0.Dot(c1);
+	float dot02 = c0.Dot(c2);
+	// 外積ベクトルが全て同じ方向なら、三角形の内側に点がある
+	if (dot01 > 0 && dot02 > 0)
+	{
+		return true;
+	}
+
+	//三角形の外側に点がある
+	return false;
+
+}
+
+/// <summary>
+/// 弾と法線付き三角形のあたり判定
+/// </summary>
+/// <param name="_sphere">球</param>
+/// <param name="_triangle">法線付き三角形</param>
+/// <param name="_inter">交点</param>
+/// <returns>あたり判定結果</returns>
+/// 裏面はとらない
+bool CollisionNode::CheckSphere2Triangle(const Sphere & _sphere, const Triangle & _triangle, DirectX::SimpleMath::Vector3 * _inter)
+{
+	Vector3 p;
+
+	// 球の中心に対する最近接点である三角形上にある点pを見つける
+	ClosestPtPoint2Triangle(_sphere.center, _triangle, &p);
+
+	Vector3 v = p - _sphere.center;
+
+	// 球と三角形が交差するのは、球の中心から点pまでの距離が球の半径よりも小さい場合
+	if (v.Dot(v) <= _sphere.radius * _sphere.radius)
+	{
+		if (_inter)
+		{
+			*_inter = p;
+		}
+
+		return true;
+	}
+
+	return false;
+
+	// 球と平面（三角形が乗っている平面）の当たり判定
+	// 球と平面の距離を計算
+	float ds = _sphere.center.Dot(_triangle.Normal);
+	float dt = _triangle.P0.Dot(_triangle.Normal);
+	float dist = ds - dt;
+	// 距離が半径以上なら、当たらない
+	if (fabsf(dist) > _sphere.radius)	return false;
+	// 中心点を平面に射影したとき、三角形の内側にあれば、当たっている
+	// 射影した座標
+	Vector3 center = -dist * _triangle.Normal + _sphere.center;
+
+	// 三角形の外側になければ、当たっていない
+	if (!CheckPoint2Triangle(center, _triangle))	return false;
+
+	if (_inter)
+	{
+		*_inter = center;	// 交点をコピー
+	}
+
+	return true;
+}
+
+/// <summary>
+/// 球の球のあたり判定
+/// </summary>
+/// <param name="sphereA">球A</param>
+/// <param name="sphereB">球B</param>
+/// <returns>true: 当たっている false: 当たっていない</returns>
+bool CollisionNode::CheckSphere2Sphere(const Sphere & sphereA, const Sphere & sphereB)
+{
+	// 中心座標間の差を計算
+	Vector3 sub = sphereB.center - sphereA.center;
+	// 中心座標間の距離を計算
+	float distanceSquare = sub.x * sub.x + sub.y * sub.y + sub.z * sub.z;
+	// 半径の和
+	float radiusSquare = sphereA.radius + sphereB.radius;
+	radiusSquare = radiusSquare * radiusSquare;
+
+	// 距離が半径の和より大きければ、当たっていない
+	if (distanceSquare > radiusSquare)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+/// <summary>
+/// SphereNodeのメンバ関数
+/// </summary>
+
+/// <summary>
+/// コンストラクタ
+/// </summary>
+SphereNode::SphereNode()
+{
+	// デフォルト半径
+	m_LocalRadius = 1.0f;
+}
+
+void SphereNode::Initialize()
+{
+	// デバッグ表示用モデルを読み込む
+	m_Obj.LoadModel(L"Resources/SphereNode.cmo");
+}
+
+void SphereNode::Update()
+{
+	m_Obj.SetPosition(m_Trans);
+	m_Obj.SetScale(m_LocalRadius);
+
+	// 行列を更新
+	m_Obj.Update();
+
+	center = m_Obj.GetParent()->GetPosition();
+}
+
+void SphereNode::Draw(const DirectX::CommonStates& state, const DirectX::SimpleMath::Matrix & view, const DirectX::SimpleMath::Matrix & proj)const
+{
+	// デバッグ用モデルを描画
+	m_Obj.Draw(state, view, proj);
+}

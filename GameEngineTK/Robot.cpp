@@ -4,7 +4,7 @@
 // 
 
 #include "Robot.h"
-#include"State\StandingState.h"
+#include"State\OnGroundState.h"
 
 // 名前空間
 using namespace std;
@@ -17,7 +17,7 @@ using namespace DirectX::SimpleMath;
 Robot::Robot()
 	:Object3D()
 	,m_robotParts(Parts::length)
-	,m_state(StandingState::GetInstance())	// 初期状態後で変更
+	,m_state(OnGroundState::GetInstance())	// 初期状態後で変更
 	,m_speed(Vector3(0.0f,0.0f,0.0f))
 	,m_acceleSpeed(Vector3(0.0f,0.05f,0.0f))
 {
@@ -74,23 +74,13 @@ void Robot::Draw(const DirectX::CommonStates & state, const DirectX::SimpleMath:
 /// </summary>
 void Robot::Update()
 {
-	Vector3 pos = GetPosition();
-
-	// 位置に速度を反映
-	pos += m_speed;
-	SetPosition(pos);
-
-	// 仮で地面を作る
-	if (pos.y <= 1.0f) {
-		pos.y = 1.0f;
-		SetPosition(pos);
-	}
-
 	// 基底の更新
 	this->Object3D::Update();
-
 	// モデルの行列更新
 	Calc();
+
+	// 移動
+	m_position += m_speed;
 }
 
 /// <summary>

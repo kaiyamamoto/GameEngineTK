@@ -24,6 +24,14 @@ EnemyRobot::EnemyRobot()
 
 	m_Timer = 0;
 	m_DistAngle = 0;
+
+	m_CollisionNodeBody.Initialize();
+	// ベースパーツにぶら下げる
+	m_CollisionNodeBody.SetParent(this);
+	// ベースパーツからのオフセット
+	m_CollisionNodeBody.SetTrans(Vector3(0, 1.0f, 0));
+	// 当たり判定の半径
+	m_CollisionNodeBody.SetLocalRadius(2.0f);
 }
 
 /// <summary>
@@ -55,7 +63,7 @@ void EnemyRobot::Update()
 
 	{
 		// 自機の角度を変動
-		Vector3 rot = this->GetRotateRadians();
+		Vector3 rot = this->GetEulerAngleRadians();
 
 		float angle = m_DistAngle - rot.y;
 
@@ -64,7 +72,7 @@ void EnemyRobot::Update()
 
 		rot.y += angle *0.05f;
 
-		SetRotateRadians(rot);
+		SetEulerAngleRadians(rot);
 
 	}
 
@@ -74,7 +82,7 @@ void EnemyRobot::Update()
 		Vector3 moveV(0, 0, -0.1f);
 		// 今の角度に合わせて移動ベクトルを回転
 		// 回転行列
-		float angle = this->GetRotateRadians().y;
+		float angle = this->GetEulerAngleRadians().y;
 		Matrix rotmat = Matrix::CreateRotationY(angle);
 		moveV = Vector3::TransformNormal(moveV, rotmat);
 		// 自機の座標を移動
@@ -83,6 +91,19 @@ void EnemyRobot::Update()
 		this->SetPosition(pos);
 	}
 
+
 	// ロボットの行列更新
 	this->Robot::Update();
+
+	// あたり判定の更新
+	m_CollisionNodeBody.Update();
+}
+
+// 描画
+void EnemyRobot::Draw(const DirectX::CommonStates & state, const DirectX::SimpleMath::Matrix & view, const DirectX::SimpleMath::Matrix & proj) const
+{
+	// 基底の描画
+	this->Robot::Draw(state, view, proj);
+
+	m_CollisionNodeBody.Draw(state, view, proj);
 }

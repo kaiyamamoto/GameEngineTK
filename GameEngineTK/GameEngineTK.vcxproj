@@ -91,11 +91,13 @@
       <FloatingPointModel>Fast</FloatingPointModel>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalIncludeDirectories>C:\Effekseer\EffekseerRuntime122\Compiled\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>d3d11.lib;dxguid.lib;uuid.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>EffekseerRendererDX11.lib;Effekseer.lib;d3d11.lib;dxguid.lib;uuid.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Effekseer\EffekseerRuntime122\Compiled\lib\VS2015\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <MeshContentTask>
       <ContentOutput>Resources\%(Filename).cmo</ContentOutput>
@@ -128,15 +130,15 @@
       <FloatingPointModel>Fast</FloatingPointModel>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>C:\DirectXTK\Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Effekseer\EffekseerRuntime122\Compiled\include;C:\DirectXTK\Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>d3d11.lib;dxguid.lib;uuid.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>EffekseerRendererDX11.lib;Effekseer.lib;d3d11.lib;dxguid.lib;uuid.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Effekseer\EffekseerRuntime122\Compiled\lib\VS2015\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <MeshContentTask>
       <ContentOutput>Resources\%(Filename).cmo</ContentOutput>
@@ -162,8 +164,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Collision.h" />
+    <ClInclude Include="CollisionNode.h" />
     <ClInclude Include="EnemyRobot.h" />
+    <ClInclude Include="GameEffect.h" />
     <ClInclude Include="Input.h" />
+    <ClInclude Include="LandShape.h" />
+    <ClInclude Include="LandShapeData.h" />
     <ClInclude Include="PlayerRobot.h" />
     <ClInclude Include="Robot.h" />
     <ClInclude Include="Camera.h" />
@@ -173,13 +180,19 @@
     <ClInclude Include="Object3D.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="State\JumpingState.h" />
+    <ClInclude Include="State\MoveState.h" />
     <ClInclude Include="State\RobotState.h" />
-    <ClInclude Include="State\StandingState.h" />
+    <ClInclude Include="State\OnGroundState.h" />
     <ClInclude Include="StepTimer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Collision.cpp" />
+    <ClCompile Include="CollisionNode.cpp" />
     <ClCompile Include="EnemyRobot.cpp" />
+    <ClCompile Include="GameEffect.cpp" />
     <ClCompile Include="Input.cpp" />
+    <ClCompile Include="LandShape.cpp" />
+    <ClCompile Include="LandShapeData.cpp" />
     <ClCompile Include="PlayerRobot.cpp" />
     <ClCompile Include="Robot.cpp" />
     <ClCompile Include="Camera.cpp" />
@@ -195,7 +208,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="State\JumpingState.cpp" />
-    <ClCompile Include="State\StandingState.cpp" />
+    <ClCompile Include="State\MoveState.cpp" />
+    <ClCompile Include="State\OnGroundState.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />
@@ -212,13 +226,16 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <MeshContentTask Include="Assets\ball.FBX" />
     <MeshContentTask Include="Assets\body.FBX" />
     <MeshContentTask Include="Assets\boin.FBX" />
     <MeshContentTask Include="Assets\ground.FBX" />
+    <MeshContentTask Include="Assets\ground200m.FBX" />
     <MeshContentTask Include="Assets\head.FBX" />
     <MeshContentTask Include="Assets\leg.FBX" />
     <MeshContentTask Include="Assets\missile.FBX" />
     <MeshContentTask Include="Assets\skydome.FBX" />
+    <MeshContentTask Include="Assets\SphereNode.FBX" />
     <MeshContentTask Include="Assets\teapot.FBX" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
