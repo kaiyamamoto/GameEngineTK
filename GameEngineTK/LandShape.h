@@ -100,6 +100,7 @@ public:
 	float GetScale() { return m_Obj.GetScale().x; }
 	const DirectX::SimpleMath::Matrix& GetLocalWorld() { return m_Obj.GetWorld(); }
 
+	Object3D* GetObject() { return &m_Obj; }
 protected:
 	// ã§í ÉfÅ[É^
 	static std::unique_ptr<LandShapeCommon> s_pCommon;

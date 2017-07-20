@@ -1,6 +1,8 @@
 #include "PlayerRobot.h"
 #include "State\OnGroundState.h"
+#include "State\RobotCommonState.h"
 #include "Input.h"
+#include "Stage.h"
 
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
@@ -47,6 +49,9 @@ PlayerRobot::~PlayerRobot()
 void PlayerRobot::Update()
 {
 	// 入力周り
+	// 共通処理
+	RobotCommonState::GetInstance()->HandleInput(*this);
+	// 遷移処理
 	RobotState* localstate = m_state->HandleInput(*this);
 	if (localstate != nullptr) {
 		m_state->Exit(*this);
@@ -91,6 +96,12 @@ void PlayerRobot::Draw(const DirectX::CommonStates & state, const DirectX::Simpl
 
 	m_CollisionNode.Draw(state, view, proj);
 	m_CollisionNodeBody.Draw(state, view, proj);
+	// デバッグ
+
+	// stateの表示
+	spriteBatch->Begin();
+	spriteFont->DrawString(spriteBatch.get(), m_state->GetStateName(), XMFLOAT2(0.0f, 0.0f));
+	spriteBatch->End();
 }
 
 /// <summary>
@@ -142,4 +153,18 @@ void PlayerRobot::ResetBullet()
 	m_robotParts[Parts::RIGHTARM]->SetEulerAngleRadians(Vector3(0, 0, 0));
 
 	m_FireFlag = false;
+}
+
+/// <summary>
+/// 当たった時の処理
+/// </summary>
+/// <param name="tag">当たったオブジェクトの種類</param>
+void PlayerRobot::OnCollisionEnter(const Object3D& obj)
+{
+	// 型情報の取得  
+	const type_info& id = typeid(obj);
+
+	if (id == typeid(Stage)) {
+
+	}
 }

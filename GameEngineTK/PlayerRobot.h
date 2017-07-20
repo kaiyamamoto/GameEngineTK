@@ -11,7 +11,7 @@ private :
 	// ’eŠÛ”­Ë’†ƒtƒ‰ƒO
 	bool m_FireFlag;
 
-	// “–‚½‚è”»’è‹…
+	// ’e‚Ì“–‚½‚è”»’è‹…
 	SphereNode m_CollisionNode;
 
 	// ©‹@‚Ì‚ ‚½‚è”»’è
@@ -35,5 +35,8 @@ public:
 	const SphereNode& GetCollisionNodeBullet() { return m_CollisionNode; }
 	// “–‚½‚è”»’è‹…‚ğæ“¾
 	const SphereNode& GetCollisionNodeBody() { return m_CollisionNodeBody; }
+
+	// “–‚½‚Á‚½‚Ìˆ—
+	void OnCollisionEnter(const Object3D& obj) override;
 };
 

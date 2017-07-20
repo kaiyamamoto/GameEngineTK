@@ -64,6 +64,7 @@ void Robot::Initialize()
 /// <param name="proj"></param>
 void Robot::Draw(const DirectX::CommonStates & state, const DirectX::SimpleMath::Matrix & view, const DirectX::SimpleMath::Matrix & proj) const
 {
+	// パーツの描画
 	for (auto itr = m_robotParts.begin(); itr != m_robotParts.end(); ++itr) {
 		(*itr)->Draw(state, view, proj);
 	}
@@ -76,11 +77,16 @@ void Robot::Update()
 {
 	// 基底の更新
 	this->Object3D::Update();
-	// モデルの行列更新
-	Calc();
 
-	// 移動
-	m_position += m_speed;
+	// 回転移動
+	Vector3 move = m_speed;
+	Matrix rotmat = Matrix::Identity;
+	rotmat *= Matrix::CreateRotationY(GetEulerAngleRadians().y);
+	move = Vector3::TransformNormal(move, rotmat);
+	m_position += move;
+
+	// 行列更新
+	Calc();
 }
 
 /// <summary>
@@ -88,8 +94,10 @@ void Robot::Update()
 /// </summary>
 void Robot::Calc()
 {
-	for (auto itr = m_robotParts.begin(); itr != m_robotParts.end(); ++itr)
-	{
-		(*itr)->Update();
+	// 基底クラスの行列更新
+	this->Object3D::Calc();
+	// パーツの行列更新
+	for (auto itr = m_robotParts.begin(); itr != m_robotParts.end(); ++itr){
+		(*itr)->Calc();
 	}
 }

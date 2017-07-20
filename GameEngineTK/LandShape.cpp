@@ -139,7 +139,7 @@ void LandShape::Initialize(const wstring& filename_bin, const wstring& filename_
 //--------------------------------------------------------------------------------------
 void LandShape::Update()
 {
-	m_Obj.Update();
+	m_Obj.Calc();
 	// ãtçsóÒÇåvéZ
 	const Matrix& localworld = m_Obj.GetWorld();
 	m_WorldLocal = localworld.Invert();

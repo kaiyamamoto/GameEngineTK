@@ -179,8 +179,11 @@
     <ClInclude Include="Game.h" />
     <ClInclude Include="Object3D.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="Stage.h" />
+    <ClInclude Include="State\InAirState.h" />
     <ClInclude Include="State\JumpingState.h" />
     <ClInclude Include="State\MoveState.h" />
+    <ClInclude Include="State\RobotCommonState.h" />
     <ClInclude Include="State\RobotState.h" />
     <ClInclude Include="State\OnGroundState.h" />
     <ClInclude Include="StepTimer.h" />
@@ -207,9 +210,12 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Stage.cpp" />
+    <ClCompile Include="State\InAirState.cpp" />
     <ClCompile Include="State\JumpingState.cpp" />
     <ClCompile Include="State\MoveState.cpp" />
     <ClCompile Include="State\OnGroundState.cpp" />
+    <ClCompile Include="State\RobotCommonState.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />
@@ -236,6 +242,13 @@
     <MeshContentTask Include="Assets\missile.FBX" />
     <MeshContentTask Include="Assets\skydome.FBX" />
     <MeshContentTask Include="Assets\SphereNode.FBX" />
+    <MeshContentTask Include="Assets\Stage\Door.FBX" />
+    <MeshContentTask Include="Assets\Stage\Towers_octogonal.FBX" />
+    <MeshContentTask Include="Assets\Stage\Towers_square.FBX" />
+    <MeshContentTask Include="Assets\Stage\Walls_corner.FBX" />
+    <MeshContentTask Include="Assets\Stage\Walls_passage.FBX" />
+    <MeshContentTask Include="Assets\Stage\Walls_straight.FBX" />
+    <MeshContentTask Include="Assets\Stage\Walls_T_road.FBX" />
     <MeshContentTask Include="Assets\teapot.FBX" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

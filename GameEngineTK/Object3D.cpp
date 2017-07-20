@@ -14,6 +14,10 @@ using namespace DirectX::SimpleMath;
 // 定数宣言
 const float Object3D::GRAVITY = -1.633f / 60.0f;
 
+// デバッグ用
+std::unique_ptr<SpriteBatch> Object3D::spriteBatch;
+std::unique_ptr<SpriteFont> Object3D::spriteFont;
+
 // 静的変数宣言
 ID3D11Device*			Object3D::m_pDevice;	// デバイスのポインタ
 ID3D11DeviceContext*	Object3D::m_pContext;	// コンテキストのポインタ
@@ -101,6 +105,10 @@ void Object3D::LoadModel(const wchar_t * fileName)
 /// </summary>
 void Object3D::Update()
 {
+}
+
+void Object3D::Calc()
+{
 	Matrix scaleMatrix, rotateMatrix, transMatrix;
 
 	// スケール
@@ -122,7 +130,7 @@ void Object3D::Update()
 	// 演算
 	m_world = scaleMatrix*rotateMatrix*transMatrix;
 	// 親の行列をかける
-	if (m_pParent){
+	if (m_pParent) {
 		m_world *= m_pParent->GetWorld();
 	}
 }

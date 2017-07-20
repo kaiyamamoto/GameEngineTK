@@ -292,7 +292,7 @@ void SphereNode::Update()
 	m_Obj.SetScale(m_LocalRadius);
 
 	// s—ñ‚ðXV
-	m_Obj.Update();
+	m_Obj.Calc();
 
 	center = m_Obj.GetParent()->GetPosition();
 }

@@ -46,7 +46,8 @@ void Game::Initialize(HWND window, int width, int height)
 	GameEffect::Initialize(m_d3dDevice.Get(), m_d3dContext.Get());
 	// 入力関係初期化
 	Input::Create();
-	CollisionNode::SetDebugVisible(true);
+	// デバッグ設定
+	CollisionNode::SetDebugVisible(false);
 	// effectの作成
 	m_effect = std::make_unique<BasicEffect>(m_d3dDevice.Get());
 	// 設定
@@ -72,8 +73,13 @@ void Game::Initialize(HWND window, int width, int height)
 	// Object3Dの設定
 	Object3D::Initialize(m_d3dDevice.Get(), m_d3dContext.Get(), m_effectFactory.get());
 	
+	// ステージ作成
+	m_stage = std::make_unique<Stage>(L"Resources\\CSV\\LandShape.csv");
+	m_stage->Load();
+	m_stage->Create(10.0f);
+
 	// オブジェクトの読み込み
-	//m_ground = std::make_unique<Object3D>(L"Resources\\ground.cmo");
+	m_ground = std::make_unique<Object3D>(L"Resources\\Towers_octogonal.cmo");
 	m_skyeDome = std::make_unique<Object3D>(L"Resources\\skydome.cmo");
 
 	// プレイヤーの作成
@@ -101,8 +107,8 @@ void Game::Initialize(HWND window, int width, int height)
 	LandShape::InitializeCommon(lscDef);
 
 	// 地形の読み込み
-	m_LandShape.Initialize(L"ball", L"ground");
-
+	m_LandShape.Initialize(L"ground", L"ground");
+	m_LandShape.SetScale(0.1f);
 }
 
 // Executes the basic game loop.
@@ -198,26 +204,29 @@ void Game::Update(DX::StepTimer const& timer)
 		m_Player->Calc();
 	}
 
-	{// 地面に乗る処理
-	 // プレイヤーの上から下へのベクトル
-		Segment player_segment;
-		// 自機のワールド座標を取得
-		Vector3 trans = m_Player->GetPosition();
-		player_segment.start = trans + Vector3(0, 1, 0);
-		// 50センチ下まで判定をとって吸着する
-		player_segment.end = trans + Vector3(0, -0.5f, 0);
+	// ステージのあたり判定
+	m_stage->ColliderUpdate();
 
-		Vector3 inter;
-		// 地形と線分の当たり判定
-		if (m_LandShape.IntersectSegment(player_segment, &inter))
-		{
-			// Y座標のみ交点の位置に移動
-			trans.y = inter.y;
-			m_Player->SetPosition(trans);
-			// 自機のワールド行列更新
-			m_Player->Calc();
-		}
-	}
+	//{// 地面に乗る処理
+	// // プレイヤーの上から下へのベクトル
+	//	Segment player_segment;
+	//	// 自機のワールド座標を取得
+	//	Vector3 trans = m_Player->GetPosition();
+	//	player_segment.start = trans + Vector3(0, 1, 0);
+	//	// 50センチ下まで判定をとって吸着する
+	//	player_segment.end = trans + Vector3(0, -0.5f, 0);
+
+	//	Vector3 inter;
+	//	// 地形と線分の当たり判定
+	//	if (m_LandShape.IntersectSegment(player_segment, &inter))
+	//	{
+	//		// Y座標のみ交点の位置に移動
+	//		trans.y = inter.y;
+	//		m_Player->SetPosition(trans);
+	//		// 自機のワールド行列更新
+	//		m_Player->Calc();
+	//	}
+	//}
 
 	// エフェクト更新
 	for (auto itr = m_effectList.begin(); itr != m_effectList.end();) {
@@ -265,9 +274,10 @@ void Game::Render()
 	m_d3dContext->IASetInputLayout(m_inputLayout.Get());
 
 	// モデルの描画
-	m_LandShape.Draw(*m_states, m_view, m_proj);
+	//m_LandShape.Draw(*m_states, m_view, m_proj);
+	m_stage->Draw(*m_states, m_view, m_proj);
 	//m_ground->Draw(*m_states, m_view, m_proj);
-	m_skyeDome->Draw(*m_states, m_view, m_proj);
+	//m_skyeDome->Draw(*m_states, m_view, m_proj);
 	m_Player->Draw(*m_states, m_view, m_proj);
 	for (auto itr = m_enemies.begin(); itr != m_enemies.end(); ++itr) {
 		(*itr)->Draw(*m_states, m_view, m_proj);

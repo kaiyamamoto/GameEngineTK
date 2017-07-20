@@ -45,6 +45,13 @@
     <ClInclude Include="LandShapeData.h">
       <Filter>LandShape</Filter>
     </ClInclude>
+    <ClInclude Include="State\RobotCommonState.h">
+      <Filter>State</Filter>
+    </ClInclude>
+    <ClInclude Include="State\InAirState.h">
+      <Filter>State</Filter>
+    </ClInclude>
+    <ClInclude Include="Stage.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -76,6 +83,13 @@
     <ClCompile Include="LandShapeData.cpp">
       <Filter>LandShape</Filter>
     </ClCompile>
+    <ClCompile Include="State\RobotCommonState.cpp">
+      <Filter>State</Filter>
+    </ClCompile>
+    <ClCompile Include="State\InAirState.cpp">
+      <Filter>State</Filter>
+    </ClCompile>
+    <ClCompile Include="Stage.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />
@@ -122,6 +136,27 @@
       <Filter>Assets</Filter>
     </MeshContentTask>
     <MeshContentTask Include="Assets\ground200m.FBX">
+      <Filter>Assets</Filter>
+    </MeshContentTask>
+    <MeshContentTask Include="Assets\Stage\Door.FBX">
+      <Filter>Assets</Filter>
+    </MeshContentTask>
+    <MeshContentTask Include="Assets\Stage\Towers_octogonal.FBX">
+      <Filter>Assets</Filter>
+    </MeshContentTask>
+    <MeshContentTask Include="Assets\Stage\Walls_passage.FBX">
+      <Filter>Assets</Filter>
+    </MeshContentTask>
+    <MeshContentTask Include="Assets\Stage\Walls_straight.FBX">
+      <Filter>Assets</Filter>
+    </MeshContentTask>
+    <MeshContentTask Include="Assets\Stage\Walls_T_road.FBX">
+      <Filter>Assets</Filter>
+    </MeshContentTask>
+    <MeshContentTask Include="Assets\Stage\Towers_square.FBX">
+      <Filter>Assets</Filter>
+    </MeshContentTask>
+    <MeshContentTask Include="Assets\Stage\Walls_corner.FBX">
       <Filter>Assets</Filter>
     </MeshContentTask>
   </ItemGroup>

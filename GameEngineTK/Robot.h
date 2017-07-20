@@ -45,13 +45,13 @@ public:
 	void Initialize();
 
 	// 描画
-	virtual void Draw(const DirectX::CommonStates& state, const DirectX::SimpleMath::Matrix& view, const DirectX::SimpleMath::Matrix& proj) const;
+	virtual void Draw(const DirectX::CommonStates& state, const DirectX::SimpleMath::Matrix& view, const DirectX::SimpleMath::Matrix& proj) const override;
 
 	//　更新
-	virtual void Update();
+	virtual void Update() override;
 
 	// 行列の計算
-	void Calc();
+	void Calc() override;
 
 	// 速度設定
 	DirectX::SimpleMath::Vector3 GetSpeed() { return m_speed; }

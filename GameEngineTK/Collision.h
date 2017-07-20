@@ -7,6 +7,7 @@
 #include <d3d11_1.h>
 #include <SimpleMath.h>
 
+
 // ‹…
 class Sphere
 {

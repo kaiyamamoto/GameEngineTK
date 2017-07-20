@@ -1,5 +1,6 @@
 #include "MoveState.h"
 #include "JumpingState.h"
+#include "OnGroundState.h"
 #include <simplemath.h>
 #include "..\Input.h"
 
@@ -26,28 +27,20 @@ void MoveState::Enter(Robot & player)
 /// <returns>次の状態があるときは状態を返す</returns>
 RobotState * MoveState::HandleInput(Robot & robot)
 {
-	Update(robot);
+	// ジャンプ
+	if (Input::GetKeyDown(Key::Space)) 		return JumpingState::GetInstance();
 
-	// ロボ回転	関数化
-	Vector3 roteV = Vector3(0.0f, 0.0f, 0.0f);
-	if		(Input::GetKey(Key::D))	  roteV = Vector3(0.0f, -0.01f, 0.0f);
-	else if (Input::GetKey(Key::A)) roteV = Vector3(0.0f, 0.01f, 0.0f);
-	robot.SetEulerAngle(robot.GetEulerAngle() + roteV);
-
-	// ロボ移動	関数化
-	Vector3 moveV = Vector3(0.0f, 0.0f, 0.0f);
-	if		(Input::GetKey(Key::W))		 moveV = Vector3(0.0f, 0.0f, -0.1f);
-
-	else if (Input::GetKey(Key::S)) moveV = Vector3(0.0f, 0.0f, +0.1f);
-
-	if (moveV != Vector3::Zero) m_isWalke = true;
+	// ロボ移動
+	if (Input::GetKey(Key::W))		 robot.SetSpeedZ(-0.3f);
+	else if (Input::GetKey(Key::S)) robot.SetSpeedZ(0.3f);
+	// 移動していなかったら戻る
+	else {
+		robot.SetSpeedZ(0.0f);
+		return OnGroundState::GetInstance();
+	}
+	// アニメーション用
+	if (robot.GetSpeed().z != 0.0f) m_isWalke = true;
 	else m_isWalke = false;
-
-	// 移動回転	関数化
-	Matrix rotmat = Matrix::Identity;
-	rotmat *= Matrix::CreateRotationY(robot.GetEulerAngleRadians().y);
-	moveV = Vector3::TransformNormal(moveV, rotmat);
-	robot.SetPosition(robot.GetPosition() + moveV);
 
 	return nullptr;
 }
@@ -73,6 +66,8 @@ void MoveState::Update(Robot & robot)
 /// <param name="robot"></param>
 void MoveState::Exit(Robot & robot)
 {
+	// 移動終了
+	robot.SetSpeedZ(0.0f);
 	robot.GetRobotParts(Robot::Parts::LEFTLEG)->SetPosition(Vector3(1.0f, 0.0f, 0.0f));
 	robot.GetRobotParts(Robot::Parts::RIGHTLEG)->SetPosition(Vector3(-1.0f, 0.0f, 0.0f));
 }
