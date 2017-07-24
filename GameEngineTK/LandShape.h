@@ -69,14 +69,14 @@ protected:
 
 
 // 地形当たり
-class LandShape
+class LandShape:public Object3D
 {
 public:
 	// エフェクトファクトリ生成
 	static void InitializeCommon(LandShapeCommonDef def);
 
 	// コンストラクタ
-	LandShape();
+	LandShape() ;
 	// 初期化
 	void Initialize(const std::wstring& filename_bin, const std::wstring& filename_cmo);
 	// ワールド行列の計算
@@ -86,29 +86,16 @@ public:
 	// ライティングカット
 	void DisableLighting();
 
-	bool IntersectSphere(const Sphere& sphere, DirectX::SimpleMath::Vector3* reject);
-	bool IntersectSegment(const Segment& segment, DirectX::SimpleMath::Vector3* inter);
+	bool IntersectSphere(const Sphere& sphere, DirectX::SimpleMath::Vector3* reject) const ;
+	bool IntersectSegment(const Segment& segment, DirectX::SimpleMath::Vector3* inter)const ;
+	bool IntersectSegmentFloor(const Segment& segment, DirectX::SimpleMath::Vector3* inter)const ;
 
-	// アクセッサ
-	void SetTrans(const DirectX::SimpleMath::Vector3& trans) { m_Obj.SetPosition(trans); }
-	void SetRot(const DirectX::SimpleMath::Vector3& rot) { m_Obj.SetEulerAngle(rot); }
-	void SetScale(float scale) { m_Obj.SetScale(DirectX::SimpleMath::Vector3(scale)); }
-	void SetLocalWorld(const DirectX::SimpleMath::Matrix& mat) { m_Obj.SetWorld(mat); }
-
-	const DirectX::SimpleMath::Vector3& GetTrans() { return m_Obj.GetPosition(); }
-	const DirectX::SimpleMath::Vector3& GetRot() { return m_Obj.GetEulerAngle(); }
-	float GetScale() { return m_Obj.GetScale().x; }
-	const DirectX::SimpleMath::Matrix& GetLocalWorld() { return m_Obj.GetWorld(); }
-
-	Object3D* GetObject() { return &m_Obj; }
 protected:
 	// 共通データ
 	static std::unique_ptr<LandShapeCommon> s_pCommon;
 	// 地形当たりデータマップ
 	static std::map<std::wstring, std::unique_ptr<LandShapeData>> s_dataarray;
 
-	// 表示オブジェクト
-	Object3D m_Obj;
 	// 地形当たりデータ
 	const LandShapeData* m_pData;
 	// ワールド→モデル行列

@@ -31,7 +31,7 @@ RobotState * MoveState::HandleInput(Robot & robot)
 	if (Input::GetKeyDown(Key::Space)) 		return JumpingState::GetInstance();
 
 	// ƒƒ{ˆÚ“®
-	if (Input::GetKey(Key::W))		 robot.SetSpeedZ(-0.3f);
+	if (Input::GetKey(Key::W)||robot.GetAutoRunVisible())	 robot.SetSpeedZ(-0.3f);
 	else if (Input::GetKey(Key::S)) robot.SetSpeedZ(0.3f);
 	// ˆÚ“®‚µ‚Ä‚¢‚È‚©‚Á‚½‚ç–ß‚é
 	else {

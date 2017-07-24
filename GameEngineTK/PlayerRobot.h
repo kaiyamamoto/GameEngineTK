@@ -14,8 +14,6 @@ private :
 	// 弾の当たり判定球
 	SphereNode m_CollisionNode;
 
-	// 自機のあたり判定
-	SphereNode m_CollisionNodeBody;
 public:
 	PlayerRobot();			// コンストラクタ	
 	virtual ~PlayerRobot();	// デストラクタ
@@ -33,8 +31,6 @@ public:
 
 	// 当たり判定球を取得
 	const SphereNode& GetCollisionNodeBullet() { return m_CollisionNode; }
-	// 当たり判定球を取得
-	const SphereNode& GetCollisionNodeBody() { return m_CollisionNodeBody; }
 
 	// 当たった時の処理
 	void OnCollisionEnter(const Object3D& obj) override;

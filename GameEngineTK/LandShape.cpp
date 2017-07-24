@@ -97,7 +97,8 @@ void LandShape::InitializeCommon(LandShapeCommonDef def)
 // コンストラクタ
 //--------------------------------------------------------------------------------------
 LandShape::LandShape()
-	: m_pData(nullptr)
+	:m_WorldLocal(Matrix::Identity)
+	, m_pData(nullptr)
 {
 
 }
@@ -130,7 +131,7 @@ void LandShape::Initialize(const wstring& filename_bin, const wstring& filename_
 		// フルパスに補完
 		wstring fullpath_cmo = L"Resources/" + filename_cmo + L".cmo";
 		// オブジェクト初期化
-		m_Obj.LoadModel(fullpath_cmo.c_str());
+		LoadModel(fullpath_cmo.c_str());
 	}
 }
 
@@ -139,9 +140,10 @@ void LandShape::Initialize(const wstring& filename_bin, const wstring& filename_
 //--------------------------------------------------------------------------------------
 void LandShape::Update()
 {
-	m_Obj.Calc();
+	// 行列更新
+	this->Object3D::Calc();
 	// 逆行列を計算
-	const Matrix& localworld = m_Obj.GetWorld();
+	const Matrix& localworld = GetWorld();
 	m_WorldLocal = localworld.Invert();
 }
 
@@ -153,7 +155,7 @@ void LandShape::Draw(const DirectX::CommonStates& state, const DirectX::SimpleMa
 	if (CollisionNode::GetDebugVisible() == false)
 	{
 		// モデル描画
-		m_Obj.Draw(state,view,proj);
+		this->Object3D::Draw(state,view,proj);
 	}
 	else if (m_pData)
 	{
@@ -162,7 +164,7 @@ void LandShape::Draw(const DirectX::CommonStates& state, const DirectX::SimpleMa
 		const Matrix& projection = s_pCommon->m_pCamera->GetProjMatrix();
 
 		// 作成した行列をエフェクトにセット
-		s_pCommon->m_pEffect->SetWorld(m_Obj.GetWorld());
+		s_pCommon->m_pEffect->SetWorld(GetWorld());
 		s_pCommon->m_pEffect->SetView(view);
 		s_pCommon->m_pEffect->SetProjection(projection);
 
@@ -199,7 +201,6 @@ void LandShape::Draw(const DirectX::CommonStates& state, const DirectX::SimpleMa
 
 		// 描画終了
 		s_pCommon->m_pPrimitiveBatch->End();
-		m_Obj.Draw(state, view, proj);
 	}
 }
 
@@ -213,7 +214,7 @@ void LandShape::DisableLighting()
 // sphere : 判定球
 // reject : 押し出すベクトル
 //--------------------------------------------------------------------------------------
-bool LandShape::IntersectSphere(const Sphere& sphere, Vector3* reject)
+bool LandShape::IntersectSphere(const Sphere& sphere, Vector3* reject) const
 {
 	//return false;	/// TODO 仮
 	if (m_pData == nullptr) return false;
@@ -226,7 +227,7 @@ bool LandShape::IntersectSphere(const Sphere& sphere, Vector3* reject)
 	Vector3 l_normal;
 	Vector3 l_down;
 	// スケールを取得
-	float scale = GetScale();
+	float scale = GetScale().x;
 
 	// 球をコピー
 	Sphere localsphere = sphere;
@@ -275,7 +276,7 @@ bool LandShape::IntersectSphere(const Sphere& sphere, Vector3* reject)
 		over_length *= scale;
 
 		// ワールド行列を取得
-		const Matrix& localworld = m_Obj.GetWorld();
+		const Matrix& localworld = GetWorld();
 
 		// 排斥ベクトルの計算
 		if (reject != nullptr)
@@ -298,7 +299,7 @@ bool LandShape::IntersectSphere(const Sphere& sphere, Vector3* reject)
 // segment : 線分
 // （出力）inter : 交点（ポリゴンの平面上で、点との再接近点の座標を返す）
 //--------------------------------------------------------------------------------------
-bool LandShape::IntersectSegment(const Segment& segment, Vector3* inter)
+bool LandShape::IntersectSegment(const Segment& segment, Vector3* inter) const
 {
 	//return false;	/// TODO 仮
 	if (m_pData == nullptr) return false;
@@ -363,7 +364,83 @@ bool LandShape::IntersectSegment(const Segment& segment, Vector3* inter)
 	if (hit && inter != nullptr)
 	{
 		// 衝突点の座標をモデル座標系からワールド座標系に変換
-		const Matrix& localworld = m_Obj.GetWorld();
+		const Matrix& localworld = GetWorld();
+		*inter = Vector3::Transform(l_inter, localworld);
+	}
+
+	return hit;
+}
+
+//--------------------------------------------------------------------------------------
+// 地形と線分の交差判定
+// segment : 線分
+// （出力）inter : 交点（ポリゴンの平面上で、点との再接近点の座標を返す）
+//--------------------------------------------------------------------------------------
+bool LandShape::IntersectSegmentFloor(const Segment& segment, Vector3* inter) const 
+{
+	if (m_pData == nullptr) return false;
+
+	// ヒットフラグを初期化
+	bool hit = false;
+	// 大きい数字で初期化
+	float distance = 1.0e5;
+	// 角度判定用に地面とみなす角度の限界値<度>
+	const float limit_angle = XMConvertToRadians(30.0f);
+	Vector3 l_inter;
+
+	// コピー
+	Segment localSegment = segment;
+	// 線分をワールド座標からモデル座標系に引き込む
+	localSegment.start = Vector3::Transform(localSegment.start, m_WorldLocal);
+	localSegment.end = Vector3::Transform(localSegment.end, m_WorldLocal);
+	// 線分の方向ベクトルを取得
+	Vector3 segmentNormal = localSegment.end - localSegment.start;
+	segmentNormal.Normalize();
+
+	// 三角形の数
+	int nTri = m_pData->m_Triangles.size();
+	// 全ての三角形について
+	for (int i = 0; i < nTri; i++)
+	{
+		float temp_distance;
+		Vector3 temp_inter;
+
+		// 上方向ベクトルと法線の内積
+		// 長さが１のベクトル２同士の内積は、コサイン（ベクトルの内積の定義より）
+		float cosine = -segmentNormal.Dot(m_pData->m_Triangles[i].Normal);
+		//// コサイン値から、上方向との角度差を計算
+		//float angle = acosf(cosine);
+		//// 上方向との角度が限界角より大きければ、面の傾きが大きいので、地面とみなさずスキップ
+		//if ( angle > limit_angle ) continue;
+
+		//--高速版--
+		const float limit_cosine = cosf(limit_angle);
+		// コサインが１のときにベクトル間の角度は0度であり、ベクトルの角度差が大きいほど、コサインは小さいので、
+		// コサイン値のまま比較すると、角度の比較の場合と大小関係が逆である
+		// つまり、コサイン値が一定値より小さければ、面の傾きが大きいので、地面とみなさずスキップ
+		if (cosine < limit_cosine) continue;
+		//--高速版ここまで--
+
+		// 線分と三角形（ポリゴン）の交差判定
+		if (CollisionNode::CheckSegment2Triangle(localSegment, m_pData->m_Triangles[i], &temp_inter))
+		{
+			hit = true;
+			// 線分の始点と衝突点の距離を計算（めりこみ距離）
+			temp_distance = Vector3::Distance(localSegment.start, temp_inter);
+			// めりこみ具合がここまでで最小なら
+			if (temp_distance < distance)
+			{
+				// 衝突点の座標、めりこみ距離を記録
+				l_inter = temp_inter;
+				distance = temp_distance;
+			}
+		}
+	}
+
+	if (hit && inter != nullptr)
+	{
+		// 衝突点の座標をモデル座標系からワールド座標系に変換
+		const Matrix& localworld = m_world;
 		*inter = Vector3::Transform(l_inter, localworld);
 	}
 

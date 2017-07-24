@@ -1,4 +1,5 @@
 #include "RobotCommonState.h"
+#include "MoveState.h"
 #include <simplemath.h>
 #include "..\Input.h"
 
@@ -28,11 +29,20 @@ RobotState * RobotCommonState::HandleInput(Robot & robot)
 	Vector3 roteV = Vector3(0.0f, 0.0f, 0.0f);
 	float rotY = 0.01f;
 	if (robot.GetSpeed().z == 0.0f) {
-		rotY = 0.001f;
+		rotY = 0.01f;
 	}
 	if (Input::GetKey(Key::D))	roteV = Vector3(0.0f, -rotY, 0.0f);
 	else if (Input::GetKey(Key::A)) roteV = Vector3(0.0f, rotY, 0.0f);
 	robot.SetEulerAngle(robot.GetEulerAngle() + roteV);
+
+	const bool run = robot.GetAutoRunVisible();
+
+	if (Input::GetKeyDown(Key::R)) {
+		if (run)robot.AutoRun(false);
+		else robot.AutoRun(true);
+	}
+
+	if (run)MoveState::GetInstance()->HandleInput(robot);
 
 	return nullptr;
 }

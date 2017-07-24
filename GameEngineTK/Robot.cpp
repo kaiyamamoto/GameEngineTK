@@ -5,6 +5,8 @@
 
 #include "Robot.h"
 #include"State\OnGroundState.h"
+#include "State\JumpingState.h"
+#include "State\InAirState.h"
 
 // 名前空間
 using namespace std;
@@ -20,6 +22,7 @@ Robot::Robot()
 	,m_state(OnGroundState::GetInstance())	// 初期状態後で変更
 	,m_speed(Vector3(0.0f,0.0f,0.0f))
 	,m_acceleSpeed(Vector3(0.0f,0.05f,0.0f))
+	, m_autoRun(false)
 {
 	// 初期化
 	Initialize();
@@ -100,4 +103,124 @@ void Robot::Calc()
 	for (auto itr = m_robotParts.begin(); itr != m_robotParts.end(); ++itr){
 		(*itr)->Calc();
 	}
+}
+
+// あたり判定処理
+RobotState * Robot::CollisionCheck()
+{
+	std::vector<std::shared_ptr<LandShape>> landshape = m_pStage->GetLandshape();
+	
+	// 水平方向あたり判定
+	{
+		Sphere sphere = GetCollisionNodeBody();
+		Vector3 trans = GetPosition();
+		Vector3 sphere2player = trans - sphere.center;
+
+		const int REPEAT_LIMIT = 5;
+
+		int rejectNum = 0;
+
+		for (std::vector<std::shared_ptr<LandShape>>::iterator it = landshape.begin();
+			it != landshape.end();
+			)
+		{
+			const LandShape* pLandShape = it->get();
+
+			Vector3 reject;	// 排斥ベクトルを入れるための変数
+
+			if (pLandShape->IntersectSphere(sphere, &reject))
+			{
+				// めり込み分だけ、球を押し出すように移動
+				sphere.center = sphere.center + reject;
+				if (++rejectNum >= REPEAT_LIMIT)
+				{
+					break;
+				}
+				it = landshape.begin();
+			}
+			else
+			{
+				it++;
+			}
+		}
+
+		SetPositionX(sphere.center.x + sphere2player.x);
+		SetPositionZ(sphere.center.z + sphere2player.z);
+
+		Calc();
+	}
+
+	// 垂直方向地形あたり判定
+	{
+		const Vector3& vel = GetSpeed();
+
+		// 速度が上向きでない？
+		if (vel.y <= 0.0f)
+		{
+			bool hit = false;
+			Segment player_segment;
+			Vector3 player_pos = GetPosition();
+			player_segment.start = player_pos + Vector3(0, SEGMENT_LENGTH, 0);
+			// 影の位置を検出するため、足元から下方向に余裕をもって判定を取る
+			player_segment.end = player_pos + Vector3(0, -SHADOW_DISTANCE, 0);
+
+			// 大きい数字で初期化
+			float distance = 1.0e5;
+			Vector3 inter;
+
+			for (std::vector<std::shared_ptr<LandShape>>::iterator it = landshape.begin();
+				it != landshape.end();
+				it++)
+			{
+				const LandShape* pLandShape = it->get();
+				float temp_distance;
+				Vector3 temp_inter;
+
+				// 床面との当たりを判定
+				if (pLandShape->IntersectSegmentFloor(player_segment, &temp_inter))
+				{
+					hit = true;
+					temp_distance = Vector3::Distance(player_segment.start, temp_inter);
+					if (temp_distance < distance)
+					{
+						inter = temp_inter;
+						distance = temp_distance;
+					}
+					// ループ抜ける
+					goto BREAK;
+				}
+			}
+		BREAK:
+
+			bool landing = false;
+
+			// ヒット
+			if (hit)
+			{
+				// 吸着距離の範囲内か？
+				if (distance <= SEGMENT_LENGTH + ADSORP_LENGTH)
+				{
+					// 着地
+					landing = true;
+					Vector3 new_position = player_pos;
+					// めりこむから上げる
+					inter.y += 1.0f;
+					new_position.y = inter.y;
+					SetPositionY(new_position.y);
+					// 地面に着く
+					return OnGroundState::GetInstance();
+				}
+			}
+
+			// 着地でなければ
+			if (!landing && !hit)
+			{// 落下開始
+				if ((m_state != InAirState::GetInstance()))
+					return InAirState::GetInstance();
+			}
+			Calc();
+		}
+	}
+
+	return nullptr;
 }

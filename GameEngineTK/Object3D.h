@@ -96,7 +96,7 @@ public:		// 関数
 	virtual void Draw(const DirectX::CommonStates& state, const Matrix& view, const Matrix& proj)const;
 
 	// ワールド座標
-	Matrix GetWorld()						{ return m_world;	 }
+	Matrix GetWorld() const			{ return m_world;	 }
 	void SetWorld(const Matrix& mat) { m_world = mat; }
 	
 	// 移動
@@ -104,15 +104,15 @@ public:		// 関数
 	void SetPositionX(const float& vec) { m_position.x = vec; }
 	void SetPositionY(const float& vec) { m_position.y = vec; }
 	void SetPositionZ(const float& vec) { m_position.z = vec; }
-	Vector3 GetPosition()					{ return m_position; }
+	Vector3 GetPosition() const 		{ return m_position; }
 	
 	// 回転角
 	void SetEulerAngle(const Vector3& rotation)			{ m_eulerAngles = rotation*DirectX::XM_2PI; m_useQuternion = false; }
 	void SetEulerAngleRadians(const Vector3& rotation)	{ m_eulerAngles = rotation; m_useQuternion = false; }
 	void SetRotation(const Quaternion& rotation)		{ m_rotateQuaternion = rotation; m_useQuternion = true; }
-	Vector3 GetEulerAngle()								{ return m_eulerAngles / DirectX::XM_2PI; }
-	Vector3 GetEulerAngleRadians()						{ return m_eulerAngles; }
-	const Quaternion& GetRotation()						{ return m_rotateQuaternion; }
+	Vector3 GetEulerAngle()				const 			{ return m_eulerAngles / DirectX::XM_2PI; }
+	Vector3 GetEulerAngleRadians()		const 			{ return m_eulerAngles; }
+	const Quaternion& GetRotation()		const 			{ return m_rotateQuaternion; }
 
 	// スケール
 	void SetScale(const float& scale) { m_scale = Vector3(scale); }
@@ -120,11 +120,11 @@ public:		// 関数
 	void SetScaleX(const float& scale) { m_scale.x = scale; }
 	void SetScaleY(const float& scale) { m_scale.y = scale; }
 	void SetScaleZ(const float& scale) { m_scale.z = scale; }
-	Vector3 GetScale() { return m_scale; }
+	Vector3 GetScale() const			{ return m_scale; }
 
 	// 親関係
 	void SetParent(Object3D* pObj) { m_pParent = pObj; }
-	Object3D* GetParent() { return m_pParent; }
+	Object3D* GetParent() const { return m_pParent; }
 
 	// 当たった時の処理
 	virtual void OnCollisionEnter(const Object3D& obj){}

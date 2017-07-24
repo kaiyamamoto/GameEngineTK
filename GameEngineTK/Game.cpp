@@ -76,7 +76,7 @@ void Game::Initialize(HWND window, int width, int height)
 	// ステージ作成
 	m_stage = std::make_unique<Stage>(L"Resources\\CSV\\LandShape.csv");
 	m_stage->Load();
-	m_stage->Create(10.0f);
+	m_stage->Create(22.7f);
 
 	// オブジェクトの読み込み
 	m_ground = std::make_unique<Object3D>(L"Resources\\Towers_octogonal.cmo");
@@ -84,7 +84,8 @@ void Game::Initialize(HWND window, int width, int height)
 
 	// プレイヤーの作成
 	m_Player = std::make_unique<PlayerRobot>();
-	m_Player->SetPosition(Vector3(0.0f, 1.0f, 0.0f));
+	m_Player->SetPosition(Vector3(0.0f, 25.0f, 0.0f));
+	m_Player->SetStagePointer(m_stage.get());
 
 	// 敵の作成
 	int enemyNum = rand() % 10 + 1;
@@ -137,6 +138,17 @@ void Game::Update(DX::StepTimer const& timer)
 	// デバッグカメラの更新
 	//m_debugCamera->Update();
 
+	// デバッグ
+	if (Input::GetKeyDown(Key::LeftShift)) {
+		bool debug = CollisionNode::GetDebugVisible();
+		if (debug == true) {
+			CollisionNode::SetDebugVisible(false);
+		}
+		else {
+			CollisionNode::SetDebugVisible(true);
+		}
+	}
+
 	// カメラの更新
 	m_camera->Update();							
 
@@ -178,55 +190,6 @@ void Game::Update(DX::StepTimer const& timer)
 		}
 		else it++;	// イテレータを進める
 	}
-
-	{// 自機の地形へのめり込みを検出して、押し出す
-	 // 自機の全身球を取得
-		Sphere sphere = m_Player->GetCollisionNodeBody();
-		// 自機のワールド座標を取得
-		Vector3 trans = m_Player->GetPosition();
-		// 当たり球の中心から自機の足元へのベクトル
-		Vector3 sphere2player = trans - sphere.center;
-
-		// 排斥ベクトル
-		Vector3 reject;
-
-		// 地形と球の当たり判定
-		if (m_LandShape.IntersectSphere(sphere, &reject))
-		{
-			// めり込み分だけ、球を押し出す
-			sphere.center += reject;
-		}
-
-		// めり込みを排除した座標をセット
-		m_Player->SetPosition(sphere.center += sphere2player);
-
-		// 自機のワールド行列更新
-		m_Player->Calc();
-	}
-
-	// ステージのあたり判定
-	m_stage->ColliderUpdate();
-
-	//{// 地面に乗る処理
-	// // プレイヤーの上から下へのベクトル
-	//	Segment player_segment;
-	//	// 自機のワールド座標を取得
-	//	Vector3 trans = m_Player->GetPosition();
-	//	player_segment.start = trans + Vector3(0, 1, 0);
-	//	// 50センチ下まで判定をとって吸着する
-	//	player_segment.end = trans + Vector3(0, -0.5f, 0);
-
-	//	Vector3 inter;
-	//	// 地形と線分の当たり判定
-	//	if (m_LandShape.IntersectSegment(player_segment, &inter))
-	//	{
-	//		// Y座標のみ交点の位置に移動
-	//		trans.y = inter.y;
-	//		m_Player->SetPosition(trans);
-	//		// 自機のワールド行列更新
-	//		m_Player->Calc();
-	//	}
-	//}
 
 	// エフェクト更新
 	for (auto itr = m_effectList.begin(); itr != m_effectList.end();) {
@@ -274,7 +237,7 @@ void Game::Render()
 	m_d3dContext->IASetInputLayout(m_inputLayout.Get());
 
 	// モデルの描画
-	//m_LandShape.Draw(*m_states, m_view, m_proj);
+	m_LandShape.Draw(*m_states, m_view, m_proj);
 	m_stage->Draw(*m_states, m_view, m_proj);
 	//m_ground->Draw(*m_states, m_view, m_proj);
 	//m_skyeDome->Draw(*m_states, m_view, m_proj);

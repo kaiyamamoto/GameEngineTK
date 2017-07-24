@@ -2,6 +2,7 @@
 #include "JumpingState.h"
 #include "MoveState.h"
 #include <simplemath.h>
+#include "OnGroundState.h"
 #include "..\Input.h"
 
 using namespace DirectX::SimpleMath;
@@ -28,8 +29,9 @@ RobotState * InAirState::HandleInput(Robot & robot)
 {
 	MoveState::GetInstance()->HandleInput(robot);
 
-	// ジャンプ
+	// ジャンプ(仮)
 	if (Input::GetKeyDown(Key::Space)) 		return JumpingState::GetInstance();
+
 
 	return nullptr;
 }
@@ -41,11 +43,9 @@ RobotState * InAirState::HandleInput(Robot & robot)
 void InAirState::Update(Robot & robot)
 {
 	// 重力を反映
-	//m_speed.y += Object3D::GRAVITY;
 	float speedY = robot.GetSpeed().y;
 	speedY += Object3D::GRAVITY;
 	robot.SetSpeedY(speedY);
-
 }
 
 /// <summary>
@@ -54,6 +54,7 @@ void InAirState::Update(Robot & robot)
 /// <param name="robot"></param>
 void InAirState::Exit(Robot & robot)
 {
+	robot.SetSpeedY(0.0f);
 	robot.GetRobotParts(Robot::Parts::LEFTLEG)->SetPosition(Vector3(1.0f, 0.0f, 0.0f));
 	robot.GetRobotParts(Robot::Parts::RIGHTLEG)->SetPosition(Vector3(-1.0f, 0.0f, 0.0f));
 }

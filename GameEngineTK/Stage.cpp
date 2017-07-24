@@ -3,6 +3,8 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include "PlayerRobot.h"
+#include "EnemyRobot.h"
 
 using namespace std;
 using namespace DirectX;
@@ -11,7 +13,8 @@ using namespace DirectX::SimpleMath;
 // 静的変数宣言
 // 区切り記号
 const wchar_t Stage::DELIMITA = L',';
-const Vector2 Stage::MAP_SIZE = Vector2(10.0f, 10.0f);
+const int Stage::MAP_SIZE_X = 10;
+const int Stage::MAP_SIZE_Y = 10;
 
 /// <summary>
 /// コンストラクタ
@@ -52,10 +55,10 @@ bool Stage::Create(const float interval)
 	m_pLandShapeArray.clear();
 
 	// 作成
-	for (int i = 0; i < MAP_SIZE.y; i++){
-		for (int j = 0; j < MAP_SIZE.x; j++){
+	for (int i = 0; i < MAP_SIZE_Y; i++){
+		for (int j = 0; j < MAP_SIZE_X; j++){
 			// モデル作成
-			std::unique_ptr<LandShape> landshape = std::make_unique<LandShape>();
+			std::auto_ptr<LandShape> landshape(new LandShape());
 
 			StageObjectData* data = m_objData[m_map[i][j]].get();
 
@@ -67,53 +70,21 @@ bool Stage::Create(const float interval)
 			landshape->SetScale(data->scale);
 
 			// ｙ回転反映
-			Vector3 rot = landshape->GetRot();
+			Vector3 rot = landshape->GetEulerAngle();
 			rot.y = data->rotateY;
-			landshape->SetRot(rot);
+			landshape->SetEulerAngle(rot);
 
 			// ライト無効
 			landshape->DisableLighting();
 
 			// 座標
-			landshape->SetTrans(Vector3(static_cast<float>(j)*interval, 0.0f, static_cast<float>(i)*interval));
+			landshape->SetPosition(Vector3(static_cast<float>(j)*interval, 0.0f, static_cast<float>(i)*interval));
 			landshape->Update();
 			// コンテナに追加
 			m_pLandShapeArray.push_back(std::move(landshape));
 		}
 	}
 	return true;
-}
-
-/// <summary>
-/// あたり判定の更新
-/// </summary>
-void Stage::ColliderUpdate()
-{
-	for (auto landitr = m_pLandShapeArray.begin(); landitr != m_pLandShapeArray.end(); ++landitr) {
-		for (auto itr = m_objectList.begin(); itr != m_objectList.end(); ++itr) {
-
-			// 地面に乗る処理
-			// プレイヤーの上から下へのベクトル
-			Segment segment;
-			// 自機のワールド座標を取得
-			Vector3 trans = (*itr)->GetPosition();
-			segment.start = trans + Vector3(0, 1, 0);
-			// 50センチ下まで判定をとって吸着する
-			segment.end = trans + Vector3(0, -0.5f, 0);
-
-			Vector3 inter;
-			// 地形と線分の当たり判定
-			if ((*landitr)->IntersectSegment(segment, &inter))
-			{
-				// Y座標のみ交点の位置に移動
-				trans.y = inter.y;
-				(*itr)->SetPosition(trans);
-				// 自機のワールド行列更新
-				(*itr)->Calc();
-				(*itr)->OnCollisionEnter(*(*landitr)->GetObject());
-			}
-		}
-	}
 }
 
 void Stage::Draw(const DirectX::CommonStates & state, const DirectX::SimpleMath::Matrix & view, const DirectX::SimpleMath::Matrix & proj)
@@ -130,7 +101,7 @@ void Stage::Draw(const DirectX::CommonStates & state, const DirectX::SimpleMath:
 void Stage::Delete()
 {
 	// ローカルなvector　関数を出たら消える
-	std::vector<std::unique_ptr<LandShape>>array;
+	std::vector<std::shared_ptr<LandShape>>array;
 	// swap で入れ替える
 	m_pLandShapeArray.swap(array);
 	// ローカルなvectorは自動的に破棄される
@@ -197,18 +168,16 @@ void Stage::LoadMap(wifstream* file)
 {
 	//データ読み込み用
 	wstring str;
-	int data[10 * 10];
+	int data[MAP_SIZE_X * MAP_SIZE_Y];
 	wstring token;
 
-	int y = static_cast<int>(MAP_SIZE.y);
-	int x = static_cast<int>(MAP_SIZE.x);
 	int dataCnt = 0;
 
 	//csvのデータをカンマを飛ばして読み込む
-	for (int i = 0; i < y; i++) {
+	for (int i = 0; i < MAP_SIZE_Y; i++) {
 		getline(*file, str);
 		wstringstream stream(str);
-		for (int j = 0; j < x; j++) {
+		for (int j = 0; j < MAP_SIZE_X; j++) {
 			getline(stream, token, DELIMITA);
 			data[dataCnt] = stoi(token.c_str());
 			dataCnt++;
@@ -217,9 +186,9 @@ void Stage::LoadMap(wifstream* file)
 	// データを代入
 	dataCnt = 0;
 	// 配列確保
-	m_map = vector<vector<int>>(x, vector<int>(y));
-	for (int i = 0; i < y; i++) {
-		for (int j = 0; j < x; j++) {
+	m_map = vector<vector<int>>(MAP_SIZE_Y, vector<int>(MAP_SIZE_X));
+	for (int i = 0; i < MAP_SIZE_Y; i++) {
+		for (int j = 0; j < MAP_SIZE_X; j++) {
 			// データを代入
 			m_map[i][j] = data[dataCnt];
 			dataCnt++;

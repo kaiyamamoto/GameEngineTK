@@ -48,11 +48,16 @@ PlayerRobot::~PlayerRobot()
 /// </summary>
 void PlayerRobot::Update()
 {
-	// 入力周り
 	// 共通処理
 	RobotCommonState::GetInstance()->HandleInput(*this);
 	// 遷移処理
+	// 入力周り
+	RobotState* collisionState = this->Robot::CollisionCheck();
 	RobotState* localstate = m_state->HandleInput(*this);
+	
+	if (collisionState) localstate = collisionState;
+
+	// あたり判定周り
 	if (localstate != nullptr) {
 		m_state->Exit(*this);
 		m_state = localstate;
@@ -164,7 +169,12 @@ void PlayerRobot::OnCollisionEnter(const Object3D& obj)
 	// 型情報の取得  
 	const type_info& id = typeid(obj);
 
-	if (id == typeid(Stage)) {
-
+	// 当たったのがステージの時
+	if (id == typeid(LandShape)) {
+		// 上に居るとき
+		if (m_position.y > obj.GetPosition().y) {
+			// 地面の上にいる状態になる
+			m_state = OnGroundState::GetInstance();
+		}
 	}
 }
